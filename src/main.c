@@ -61,7 +61,7 @@ int main() {
 
 	write(cl , response , strlen(response) );
 
-	close(cl);
+
 
 }
 	
