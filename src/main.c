@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-# define MAX_SIZE 2056
+#define MAX_SIZE 2056
 #define PING "+PONG\r\n"
 
 
@@ -63,9 +63,9 @@ int main() {
 
 	char* buf[MAX_SIZE];
 
-	while(read(cl , buf , MAX_SIZE)){
+	while(recv(cl , buf , MAX_SIZE , 0)){
 
-		write(cl, PING , sizeof(PING));
+		send(cl, PING , strlen(PING) , 0);
 
 	}
 
