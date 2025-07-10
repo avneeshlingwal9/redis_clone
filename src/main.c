@@ -57,17 +57,26 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 	
+	while(1){
 	
 
 	int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
 
 	char* buf[MAX_SIZE];
 
+	if(fork() == 0){
+
 	while(recv(cl , buf , MAX_SIZE , 0)){
 
 		send(cl, PING , strlen(PING) , 0);
 
 	}
+	exit(0);
+}}
+
+
+
+
 
 
 
