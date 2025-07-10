@@ -53,8 +53,11 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 	
-	accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
-	printf("Client connected\n");
+	int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
+
+	const char* response = "+PONG\r\n"; 
+
+	write(cl , response , strlen(response) );
 	
 	close(server_fd);
 
