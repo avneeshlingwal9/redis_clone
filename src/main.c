@@ -7,6 +7,10 @@
 #include <errno.h>
 #include <unistd.h>
 
+# define MAX_SIZE 2056
+#define PING "+PONG\r\n"
+
+
 int main() {
 	// Disable output buffering
 	setbuf(stdout, NULL);
@@ -53,17 +57,22 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 	
-	while(1){
+	
 
-		int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
+	int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
 
-		const char* response = "+PONG\r\n"; 
+	char* buf[MAX_SIZE];
 
-	write(cl , response , strlen(response) );
+	while(read(cl , buf , MAX_SIZE)){
+
+		write(cl, PING , sizeof(PING));
+
+	}
 
 
 
-}
+
+
 	
 	close(server_fd);
 
