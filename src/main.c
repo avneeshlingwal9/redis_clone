@@ -7,8 +7,111 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <stdbool.h>
+
+
 #define MAX_SIZE 2056
+
 #define PING "+PONG\r\n"
+
+bool isSymbol(char c){
+
+	return c == '*' || c == '$'; 
+
+
+}
+
+void addEncoding(char* parsed , int i){
+
+	parsed[i] = '\r';
+
+	parsed[i + 1] = '\n'; 
+
+
+
+}
+
+int convertInt(char *c){
+
+	int res = 0; 
+
+	for(int i = 1 ; i < strlen(c); i++){
+
+		res = res * 10 + (c[i] - '0');
+
+	}
+
+	return res; 
+
+}
+
+
+	
+	
+
+void executeCommand(char *arr[], int len , int fd ){
+
+	char* command = arr[0]; 
+
+
+	if(strcmp(command , "ECHO") == 0){
+
+		
+		for(int i = 1 ; i < len; i++){
+
+			int len = strlen(arr[i]);
+
+			char* parsed = (char*)malloc(strlen(arr[i]) + sizeof(len) + 5); 
+
+			sprintf(parsed,"$%d\\r\\n%s\\r\\n", len, arr[i]);
+
+
+			send(fd , parsed , strlen(parsed), 0);  
+
+			free(parsed); 
+
+		}
+
+
+	}
+
+	else{
+
+		send(fd , PING , strlen(PING), 0);
+	}
+
+}
+void handleCommand(char buf[] , int fd){
+
+	char *curr;
+	curr = strtok(buf , "\\r\\n");
+
+	int len = convertInt(curr); 
+
+	char *arr[len]; 
+
+	int i = 0; 
+	
+	while((curr = strtok(NULL, "\\r\\n")) != NULL){
+
+		if(!isSymbol(curr[0])){
+
+			arr[i] = curr; 
+			i++; 
+
+		}
+
+
+
+	}
+
+	executeCommand(arr , len , fd); 
+
+
+
+}
+
+
 
 
 int main() {
@@ -62,16 +165,30 @@ int main() {
 
 	int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
 
-	char* buf[MAX_SIZE];
+	char buf[MAX_SIZE];
+
 
 	if(fork() == 0){
 
-	while(recv(cl , buf , MAX_SIZE , 0)){
 
-		send(cl, PING , strlen(PING) , 0);
+	int len = 0 ; 
+	while((len = recv(cl , buf , MAX_SIZE , 0)) != 0){
 
-	}
+
+
+		handleCommand(buf, cl);
+
+
+	
+
+	
+
+
+}
+
+	close(cl);
 	exit(0);
+
 }}
 
 
