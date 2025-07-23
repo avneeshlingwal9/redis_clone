@@ -74,10 +74,18 @@ int handleConnection(int fd){
 
 
 	int bytesRead = read(fd , buf , MAX_SIZE);
+	if(bytesRead == 0){
+		return 0; 
+	}
 	
 	char* end = buf + bytesRead; 
 
 	int numArgs = parseLen(&input); 
+
+	if(numArgs <= 0){
+		printf("No arguments found.\n"); 
+		return 0;
+	}
 
 	char** arguments = (char**)malloc(numArgs* sizeof(char*)); 
 
