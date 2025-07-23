@@ -1,115 +1,112 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
+
+
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <string.h>
+
 #include <errno.h>
-#include <unistd.h>
+
 
 #include <stdbool.h>
+#include <sys/epoll.h>
+#include <fcntl.h>
+#include "parser.h"
+
+#define MAX_CONNECTIONS 32
 
 
 #define MAX_SIZE 2056
 
-#define PING "+PONG\r\n"
+int makeNonBlocking(int fd){
 
-bool isSymbol(char c){
-
-	return c == '*' || c == '$'; 
-
+	int flags = fcntl(fd , F_GETFL, 0);
+	return fcntl(fd , F_SETFL , flags | O_NONBLOCK); 
 
 }
 
-void addEncoding(char* parsed , int i){
+int execute(int fd , char** arguments , int numArgs){
 
-	parsed[i] = '\r';
+	Commands command = parseCommand(arguments[0]); 
 
-	parsed[i + 1] = '\n'; 
-
-
-
-}
-
-int convertInt(char *c){
-
-	int res = 0; 
-
-	for(int i = 1 ; i < strlen(c); i++){
-
-		res = res * 10 + (c[i] - '0');
-
-	}
-
-	return res; 
-
-}
+	free(arguments[0]); 
 
 
-	
-	
 
-void executeCommand(char *arr[], int len , int fd ){
+	if(command == PING){
 
-	char* command = arr[0]; 
-
-
-	if(strcmp(command , "ECHO") == 0){
-
-		
-		for(int i = 1 ; i < len; i++){
-
-			int len = strlen(arr[i]);
-
-			char* parsed = (char*)malloc(strlen(arr[i]) + sizeof(len) + 5); 
-
-			sprintf(parsed,"$%d\\r\\n%s\\r\\n", len, arr[i]);
-
-
-			send(fd , parsed , strlen(parsed), 0);  
-
-			free(parsed); 
+			send(fd , RESP_PONG , strlen(RESP_PONG) , 0); 
 
 		}
+		else if(command == ECHO){
 
+			
+			char* arg = arguments[1]; 
+
+			int digits = snprintf(NULL , 0 , "%d", (int)strlen(arg)); 
+
+
+
+			char* toSend = (char*)malloc(strlen(arg) + digits + 6); // Extra for '\0'
+
+
+
+			sprintf(toSend , "$%d\r\n%s\r\n" , (int)strlen(arg), arg);
+
+
+			
+
+			send(fd , toSend , strlen(toSend), 0); 
+
+			free(arg);
+			free(toSend); 
+			
+		}
+
+
+		return 1; 
+}
+
+int handleConnection(int fd){
+
+
+	char* buf = (char*)malloc(MAX_SIZE); 
+	char* input = buf; 
+
+
+	int bytesRead = read(fd , buf , MAX_SIZE);
+	
+	char* end = buf + bytesRead; 
+
+	int numArgs = parseLen(&input); 
+
+	char** arguments = (char**)malloc(numArgs* sizeof(char*)); 
+
+	if(parseArray(&input , end , &arguments , numArgs) == true){
+
+		execute(fd , arguments , numArgs); 
 
 	}
 
 	else{
 
-		send(fd , PING , strlen(PING), 0);
-	}
-
-}
-void handleCommand(char buf[] , int fd){
-
-	char *curr;
-	curr = strtok(buf , "\\r\\n");
-
-	int len = convertInt(curr); 
-
-	char *arr[len]; 
-
-	int i = 0; 
-	
-	while((curr = strtok(NULL, "\\r\\n")) != NULL){
-
-		if(!isSymbol(curr[0])){
-
-			arr[i] = curr; 
-			i++; 
-
-		}
-
-
+		printf("Incomplete parsing.\n"); 
 
 	}
 
-	executeCommand(arr , len , fd); 
+	free(arguments);
+	free(buf); 
+
+	return 0; 
+
+
+
+
 
 
 
 }
+
+
+
 
 
 
@@ -159,37 +156,70 @@ int main() {
 	
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
+
+	int epoll_fd = epoll_create1(0) , nfds;
+
+	struct epoll_event ev, events[MAX_CONNECTIONS];
+
+	makeNonBlocking(server_fd);
+
+	ev.events = EPOLLIN;
+	ev.data.fd = server_fd; 
+
+	if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
+
+		perror("Error occured while adding file descriptor.\n");
+		return 3; 
+
+	} 
 	
 	while(1){
 	
-
-	int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
-
-	char buf[MAX_SIZE];
+		nfds = epoll_wait(epoll_fd , events , MAX_CONNECTIONS , -1); 
 
 
-	if(fork() == 0){
+		for(int i = 0 ; i < nfds ; i++){
+
+			if(events[i].data.fd == server_fd){
+
+				// Add a new connection.
+
+				int cl = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t*)&client_addr_len);
+
+				makeNonBlocking(cl);
+
+				printf("Client Connected.\n"); 
+
+				ev.data.fd = cl; 
+				ev.events = EPOLLIN;
+
+				// Adding fd to monitor list. 
+
+				epoll_ctl(epoll_fd , EPOLL_CTL_ADD , cl , &ev); 
+
+			}
+			else{
+
+				// Something is available for reading from previous connections. 
+
+				handleConnection(events[i].data.fd);
 
 
-	int len = 0 ; 
-	while((len = recv(cl , buf , MAX_SIZE , 0)) != 0){
 
 
+			}
 
-		handleCommand(buf, cl);
 
+		}
 
 	
 
-	
+
+
+
 
 
 }
-
-	close(cl);
-	exit(0);
-
-}}
 
 
 

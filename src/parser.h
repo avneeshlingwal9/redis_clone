@@ -1,150 +1,140 @@
+#include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdbool.h>
 #include <sys/socket.h>
+#include <stdbool.h>
+#include "datastructures.h"
 
-#define PING "+PONG\r\n"
+#define RESP_PONG "+PONG\r\n"
+#define RESP_OK "+OK\r\n"
+#define RESP_NULL "$-1\r\n"
 
-
-
-
-bool isSymbol(char c){
-
-	return c == '*' || c == '$'; 
-
-
-}
-
-void addEncoding(char* parsed , int i){
-
-	parsed[i] = '\r';
-
-	parsed[i + 1] = '\n'; 
+#define MAX_ARGS 1024
+#define INFINITY 1000000000
+#define RESP_NULL_ARRAY "*0\r\n"
 
 
+char * parseBulkString( char ** input , int length){
 
-}
+	char *str = (char*)malloc(length + 1);
 
-int convertInt(char *c){
+	if(str == NULL){
 
-	int res = 0; 
+		printf("Not able to allocate memory.\n"); 
 
-	for(int i = 1 ; i < strlen(c); i++){
-
-		res = res * 10 + c[i] - '0';
+		return NULL;
 
 	}
 
-	return res; 
+
+	strncpy(str , *input , length); 
+
+	str[length] = '\0'; 
+
+	(*input) += length;
+
+	(*input) += 2 ; // Skip CRLF.
+
+	return str; 
 
 }
-char* parse(char *arg){
 
-	int arglen = strlen(arg); 
-
-	char* parsed = (char*)malloc(sizeof(char)*(arglen/10 + 1 + arglen + 5));
-
-	int i = 0; 
-
-	parsed[i++] = '$';
-
-	char argcopy[arglen/10 + 1]; 
-
-	sprintf(argcopy,"%d", arglen);	
-
-	
-	int j = 0; 
-	int argcopylen = strlen(argcopy);
-	
-	while(j < argcopylen){
-
-		parsed[i++] = argcopy[j++]; 
+int parseLen( char **input){
 
 
-	}
+	(*input)++; // Skip the initial character. 
 
-	j = 0; 
+	int length = 0 ; 
 
-	addEncoding(parsed , i); 
+	// Atoi type function. 
 
-	i+= 2 ; 
-
-	for(int k = 0 ; k < arglen; k++){
-
-		parsed[i++] = arg[k];
-
-	}
-
-	addEncoding(parsed, i); 
+	while(**input != '\r'){
 
 
+		length = length * 10 + (**input - '0'); 
 
-	return parsed;
+		(*input)++; 
 
+		if(input == NULL){
 
-	
+			printf("Parsing length error.\n");
 
-
-
-}
-void executeCommand(char *arr[], int len , int fd ){
-
-	char* command = arr[0]; 
-
-
-	if(strcmp(command , "ECHO") == 0){
-
-		
-		for(int i = 1 ; i < len; i++){
-
-			char* parsed = parse(arr[i]); 
-
-			printf("%s \n", parsed);
-
-			send(fd , parsed , strlen(parsed), 0);  
-
-			free(parsed); 
+			return -1;
 
 		}
 
-
 	}
 
-	else{
+	(*input) += 2; // Skip CRLF. 
 
-		send(fd , PING , strlen(PING), 0);
-	}
+	return length;
+
+
+
 
 }
-void handleCommand(char buf[] , int fd){
 
-	char *curr;
-	curr = strtok(buf , "\r\n");
-
-	int len = convertInt(curr); 
-
-	char *arr[len]; 
-
-	int i = 0; 
-	
-	while((curr = strtok(NULL, "\r\n")) != NULL){
-
-		if(!isSymbol(curr[0])){
+bool parseArray(char** buf , char* end , char*** arguments , int numArg){
 
 
-			arr[i] = curr; 
-			i++; 
+
+
+	for(int i = 0 ; i < numArg; i++){
+
+		int len = parseLen(buf);
+
+		if(len <= 0){
+			printf("Parsing Error.\n");
+
+			return NULL; 
+		}
+
+		if(*(buf) + len + 2  > end){
+
+			return false;
+		}
+
+		char* arg = parseBulkString(buf , len); 
+
+		if(arg == NULL){
+
+			printf("Parsing Error.\n");
+
+			return NULL; 
 
 		}
 
+		(*arguments)[i] = strdup(arg);
 
+		free(arg); 
 
 	}
 
-	executeCommand(arr , len , fd); 
+
+
+	return true; 
+
+
+
 
 
 
 }
+
+Commands parseCommand(char* comm){
+
+	if(strcasecmp(comm , "PING")){
+
+		return PING;
+	}
+
+	if(strcasecmp(comm , "ECHO")){
+
+		return ECHO; 
+
+	}
+	
+
+}
+
