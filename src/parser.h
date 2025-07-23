@@ -128,6 +128,15 @@ Commands parseCommand(char* comm){
 		return ECHO; 
 
 	}
+	if(strcasecmp(comm ,"set") == 0){
+
+		return SET;
+	}
+
+	if(strcasecmp(comm , "get") == 0){
+
+		return GET; 
+	}
 
 	printf("Command not found: %s \n", comm);
 

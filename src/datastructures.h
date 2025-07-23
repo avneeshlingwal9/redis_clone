@@ -1,4 +1,4 @@
-#include <uthash.h>
+#include "uthash.h"
 #define RESP_PONG "+PONG\r\n"
 #define RESP_OK "+OK\r\n"
 #define RESP_NULL "$-1\r\n"
@@ -29,7 +29,7 @@ typedef struct ValueNode{
     struct timespec currTime; 
     int expireTime; 
 
-};
+}ValueNode;
 typedef struct HashMap{
 
     char* key;

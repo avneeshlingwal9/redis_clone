@@ -100,7 +100,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 		int expiry = -1; 
 
-		if(numArgs < 5){
+		if(numArgs > 3){
 
 			Options option = parseOption(arguments[3]);
 
