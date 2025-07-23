@@ -4,15 +4,9 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <stdbool.h>
-#include "datastructures.h"
+#include "algorithms.h"
 
-#define RESP_PONG "+PONG\r\n"
-#define RESP_OK "+OK\r\n"
-#define RESP_NULL "$-1\r\n"
 
-#define MAX_ARGS 1024
-#define INFINITY 1000000000
-#define RESP_NULL_ARRAY "*0\r\n"
 
 
 char * parseBulkString( char ** input , int length){
@@ -142,3 +136,31 @@ Commands parseCommand(char* comm){
 
 }
 
+
+char* encodeStr(char *str){
+
+    int len = strlen(str);
+
+    int size = snprintf(NULL , 0 , "$%d\r\n%s\r\n", len , str) + 1 ; 
+
+    char* encodedStr = (char*)malloc(size);
+
+    snprintf(encodedStr, size  , "$%d\r\n%s\r\n", (int)strlen(str) ,str);
+
+    return encodedStr;
+    
+
+}
+
+Options parseOption(char* opt)
+{
+
+	if(strcasecmp(opt, "px") == 0){
+
+		return PX;
+
+	}
+
+	return OTHER;
+
+}

@@ -62,6 +62,68 @@ int execute(int fd , char** arguments , int numArgs){
 			
 		}
 
+	else if(command == GET){
+
+		char* key = arguments[1]; 
+
+		char* value = getValue(key); 
+
+		free(key); 
+
+		if(value == NULL){
+
+			send(fd , RESP_NULL , strlen(RESP_NULL) , 0); 
+
+		}
+
+		else{
+
+			char* tosend = encodeStr(value);
+			free(value); 
+
+			send(fd , tosend , strlen(tosend) , 0); 
+
+			free(tosend); 
+
+
+		}
+
+
+
+	}
+
+	else if(command == SET){
+
+
+		char* key = arguments[1];
+		char* value = arguments[2]; 
+
+		int expiry = -1; 
+
+		if(numArgs < 5){
+
+			Options option = parseOption(arguments[3]);
+
+			free(arguments[3]);
+
+			expiry = atoi(arguments[4]);
+
+		}
+
+		setValue(key , value ,expiry);
+
+		free(key);
+		free(value);
+
+		send(fd , RESP_OK , strlen(RESP_OK), 0); 
+
+
+
+
+
+
+	}
+
 
 		return 1; 
 }
@@ -234,7 +296,7 @@ int main() {
 
 
 
-
+	freeDictionary();
 
 
 
