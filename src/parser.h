@@ -124,17 +124,21 @@ bool parseArray(char** buf , char* end , char*** arguments , int numArg){
 
 Commands parseCommand(char* comm){
 
-	if(strcasecmp(comm , "PING")){
+	if(strcasecmp(comm , "ping") == 0){
 
 		return PING;
 	}
 
-	if(strcasecmp(comm , "ECHO")){
+	if(strcasecmp(comm , "echo") == 0){
 
 		return ECHO; 
 
 	}
-	
+
+	printf("Command not found: %s \n", comm);
+
+	return UNKNOWN; 
+
 
 }
 

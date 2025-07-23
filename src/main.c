@@ -36,7 +36,8 @@ int execute(int fd , char** arguments , int numArgs){
 			send(fd , RESP_PONG , strlen(RESP_PONG) , 0); 
 
 		}
-		else if(command == ECHO){
+
+	else if(command == ECHO){
 
 			
 			char* arg = arguments[1]; 
