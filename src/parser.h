@@ -330,7 +330,6 @@ u_int32_t decodeSeconds(FILE *file){
 
 	}
 
-	val = htonl(val); 
 
 	return val*1000; 
 
