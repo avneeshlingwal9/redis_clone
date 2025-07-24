@@ -44,9 +44,9 @@ int createDatabase(){
 
 		// Parse Len.
 
-		int hashlen = parseLengthEncoding(&file); 
+		int hashlen = parseLengthEncoding(file); 
 
-		int expiryKeys = parseLengthEncoding(&file);
+		int expiryKeys = parseLengthEncoding(file);
 
 		for(int i = 0 ; i < hashlen ; i++){
 
@@ -57,7 +57,7 @@ int createDatabase(){
 
 				// Read string length. 
 
-				char* key = decodeString(&file); 
+				char* key = decodeString(file); 
 /* 				int lenKey = parseLengthEncoding(&file); 
 
 				char* key = (char*)malloc(lenKey + 1); 
@@ -71,7 +71,7 @@ int createDatabase(){
 				}
 
 				key[lenKey] = '\0';  */
-				char* value = decodeString(&file); 
+				char* value = decodeString(file); 
 
 				double expiry = -1; 
 
@@ -86,17 +86,17 @@ int createDatabase(){
 			else if(curr == 0xFC){
 				// Expiry in milliseconds. 
 
-				uint64_t millisecond = decodeMilliSeconds(&file);
+				uint64_t millisecond = decodeMilliSeconds(file);
 
-				double expiry = millisecond/1000; 
+				double expiry = millisecond; 
 
 				curr = fgetc(file);
 
 				if(curr == 0x00){
 					// String type; 
 
-					char* key = decodeString(&file);
-					char* value = decodeString(&file);
+					char* key = decodeString(file);
+					char* value = decodeString(file);
 
 
 					setValue(key , value, expiry);
@@ -112,15 +112,15 @@ int createDatabase(){
 
 			else if(curr == 0xFD){
 
-				u_int32_t expiry = decodeSeconds(&file);
+				u_int32_t expiry = decodeSeconds(file);
 
 				curr = fgetc(file);
 
 				if(curr == 0x00){
 
-					char* key = decodeString(&file);
+					char* key = decodeString(file);
 
-					char* value = decodeString(&file);
+					char* value = decodeString(file);
 
 					setValue(key, value, expiry); 
 
@@ -214,6 +214,7 @@ int execute(int fd , char** arguments , int numArgs){
 		else{
 
 			char* tosend = encodeStr(value);
+			
 			free(value); 
 
 			send(fd , tosend , strlen(tosend) , 0); 

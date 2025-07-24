@@ -219,9 +219,9 @@ char* encodeArray(char** values , int numEl){
 
 }
 
-int parseLengthEncoding(FILE** file){
+int parseLengthEncoding(FILE* file){
 
-	int curr = fgetc(*file); 
+	int curr = fgetc(file); 
 
 	// Get first two bits.
 	// Mask first two bits.
@@ -244,7 +244,7 @@ int parseLengthEncoding(FILE** file){
 
 		u_int8_t msbBits = (curr & 0x3F);
 
-		u_int8_t lsBits = fgetc(*file);
+		u_int8_t lsBits = fgetc(file);
 
 		size = (msbBits << 8) | lsBits; 
 
@@ -257,7 +257,7 @@ int parseLengthEncoding(FILE** file){
 
 		for(int i = 0 ; i < 4 ; i++){
 
-			size = (size << 8) | fgetc(*file); 
+			size = (size << 8) | fgetc(file); 
 
 			
 
@@ -271,7 +271,7 @@ int parseLengthEncoding(FILE** file){
 }
 
 
-char *decodeString(FILE **file){
+char *decodeString(FILE* file){
 
 	int len = parseLengthEncoding(file); 
 
@@ -283,7 +283,7 @@ char *decodeString(FILE **file){
 
 	while(start < len){
 
-		val[start] = fgetc(*file);
+		val[start] = fgetc(file);
 		start++;
 	}
 
@@ -295,16 +295,20 @@ char *decodeString(FILE **file){
 
 }
 
-u_int64_t decodeMilliSeconds(FILE **file){
+u_int64_t decodeMilliSeconds(FILE *file){
 
 	u_int64_t val = 0 ; 
 
 
 	for(int i = 0 ; i < 8 ; i++){
 
-		val = val << 8 | fgetc(*file); 
+		u_int8_t v = fgetc(file);
+
+		val = val | ((u_int64_t)v << (8*i));
 
 	}
+
+ 
 
 
 	return val; 
@@ -312,16 +316,22 @@ u_int64_t decodeMilliSeconds(FILE **file){
 
 }
 
-u_int32_t decodeSeconds(FILE **file){
+u_int32_t decodeSeconds(FILE *file){
 
 	u_int32_t val = 0; 
 
 	for(int i = 0 ; i < 4 ; i++)
-	{
 
-		val = val << 8 | fgetc(*file); 
+	
+	{
+		u_int8_t v = fgetc(file);
+
+		val = val | ((u_int32_t)v << (8 * i));
 
 	}
-	return val; 
+
+	val = htonl(val); 
+
+	return val*1000; 
 
 }

@@ -75,6 +75,8 @@ char* getValue(char* key){
 
     ValueNode* value = (ValueNode*)node->value;
 
+    printf("Expire time: %f\n", value->expireTime);
+
     if(value->expireTime == -1){
 
         return strdup(value->value);
