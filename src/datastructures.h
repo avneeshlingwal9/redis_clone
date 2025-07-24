@@ -13,6 +13,7 @@ typedef enum {
     SET , 
     UNKNOWN, 
     ECHO,
+    CONFIG,
     
 
 }Commands;

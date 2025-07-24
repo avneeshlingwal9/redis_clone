@@ -13,6 +13,9 @@
 
 #define MAX_CONNECTIONS 32
 
+char* dir; 
+
+char* dbfilename; 
 
 #define MAX_SIZE 2056
 
@@ -123,6 +126,81 @@ int execute(int fd , char** arguments , int numArgs){
 
 
 	}
+	else if(command == CONFIG){
+
+		char* opt = arguments[1];
+		command = parseCommand(opt);
+		free(opt);
+		if(command == GET){
+
+			char* key = arguments[2]; 
+			char* toSend; 
+
+			if(strcmp(key, "dir") == 0){
+
+				char** array = (char**)malloc(sizeof(char*) * 2);
+				
+				array[0] = strdup(key); 
+				array[1] = strdup(dir); 
+				
+				toSend = encodeArray(array , 2); 
+
+				for(int i = 0 ; i < 2 ; i++){
+
+					free(array[i]);
+
+				}
+
+				free(array);
+
+
+			}
+
+			else if(strcmp(key,"dbfilename") == 0){
+
+				char** array = (char**)malloc(sizeof(char*)* 2); 
+
+				array[0] = strdup(key); 
+
+				array[1] = strdup(dbfilename);
+
+
+				toSend = encodeArray(array , 2);
+
+				for(int i = 0 ; i < 2 ; i++){
+
+					free(array[i]);
+				}
+
+				free(array); 
+			}
+
+			if(toSend == NULL){
+				printf("Error in encoding array.\n");
+			}
+			else{
+
+				send(fd , toSend , strlen(toSend), 0);
+
+			}
+
+			free(toSend);
+			free(key); 
+
+			
+
+
+
+		}
+		else{
+
+			printf("Error in executing config.\n"); 
+
+			
+
+		}
+
+	}
 
 
 		return 1; 
@@ -182,11 +260,16 @@ int handleConnection(int fd){
 
 
 
-int main() {
+int main(int argc , char* argv[]) {
+
+
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 	
+	dir = strdup(argv[2]);
+
+	dbfilename = strdup(argv[4]); 
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	printf("Logs from your program will appear here!\n");
 
@@ -297,6 +380,9 @@ int main() {
 
 
 	freeDictionary();
+
+	free(dir);
+	free(dbfilename); 
 
 
 

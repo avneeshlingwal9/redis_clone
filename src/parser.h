@@ -138,6 +138,11 @@ Commands parseCommand(char* comm){
 		return GET; 
 	}
 
+	if(strcasecmp(comm, "config") == 0){
+
+		return CONFIG; 
+	}
+
 	printf("Command not found: %s \n", comm);
 
 	return UNKNOWN; 
@@ -171,5 +176,45 @@ Options parseOption(char* opt)
 	}
 
 	return OTHER;
+
+}
+
+
+char* encodeArray(char** values , int numEl){
+
+    // 1 for NULL terminator.
+    int totalSize = snprintf(NULL , 0 , "*%d\r\n" , numEl) + 1; 
+
+    for(int i = 0 ; i < numEl; i++){
+
+        int len = strlen(values[i]); 
+        
+        totalSize += snprintf(NULL , 0 , "$%d\r\n%s\r\n", len , values[i]);
+
+
+    }
+    
+    
+    char* encodedArray = (char*)malloc(totalSize); 
+
+    int offset = snprintf(encodedArray, totalSize, "*%d\r\n" , numEl);
+
+    for(int i = 0 ; i < numEl; i++){
+
+        int len = strlen(values[i]); 
+
+        offset += snprintf(encodedArray + offset , totalSize , "$%d\r\n%s\r\n" , len , values[i]);
+
+
+    }
+
+	
+
+
+    return encodedArray;
+
+
+   
+
 
 }
