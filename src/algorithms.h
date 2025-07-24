@@ -44,6 +44,7 @@ void setValue(char* key , char* aValue , double expiry){
         return; 
 
     }
+    printf("Key is %s, value is %s, with expiry %f\n", key , value->value , value->expireTime); 
 
 
 
@@ -74,8 +75,6 @@ char* getValue(char* key){
 
 
     ValueNode* value = (ValueNode*)node->value;
-
-    printf("Expire time: %f\n", value->expireTime);
 
     if(value->expireTime == -1){
 
