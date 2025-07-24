@@ -1,6 +1,6 @@
 #include "datastructures.h"
 #include <time.h>
-#include <stdio.h>
+
 
 HashMap *dictHead = NULL;
 
@@ -19,7 +19,7 @@ double getTimeDifference(struct timespec begin){
 
 
 
-void setValue(char* key , char* aValue , int expiry){
+void setValue(char* key , char* aValue , double expiry){
 
     ValueNode* value = (ValueNode*)malloc(sizeof(ValueNode)); 
 
@@ -121,6 +121,60 @@ void freeDictionary(){
         free(curr); 
 
     } 
+
+
+
+}
+
+bool fileExists(char* path){
+
+    FILE* file = fopen(path , "rb");
+
+    if(file ){
+
+        return true;
+
+    }
+
+    fclose(file); 
+
+    return false; 
+
+
+}
+
+
+int getKeys(char*** keys){
+
+    int countKeys = HASH_COUNT(dictHead);
+
+    if(countKeys == 0){
+        
+        *keys = NULL; 
+
+        return 0;
+    }
+
+    char** keySet = (char**)malloc(sizeof(char*)* countKeys); 
+
+
+    int start = 0 ;
+
+    HashMap *curr; 
+
+    for(curr = dictHead ; curr != NULL ; curr = curr->hh.next){
+
+        keySet[start++] = strdup(curr->key);
+
+    }
+
+    
+    *keys = keySet; 
+
+    return countKeys;
+
+
+
 
 
 

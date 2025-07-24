@@ -10,6 +10,7 @@
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include "parser.h"
+#include <sys/wait.h>
 
 #define MAX_CONNECTIONS 32
 
@@ -17,7 +18,134 @@ char* dir;
 
 char* dbfilename; 
 
+char* filePath; 
+
 #define MAX_SIZE 2056
+int createDatabase(){
+
+	if(!fileExists(filePath)){
+
+		printf("Database Do not Exist.\n"); 
+
+
+			return 1; 
+
+		}
+
+		FILE *file = fopen(filePath, "rb");
+
+		int curr ; 
+		// Read till Database Section.
+		while((curr = fgetc(file)) != EOF && curr != 0xFE){}; 
+
+		// Skip two bytes to find length of hash table. 
+
+		fseek(file , 2 , SEEK_CUR);
+
+		// Parse Len.
+
+		int hashlen = parseLengthEncoding(&file); 
+
+		int expiryKeys = parseLengthEncoding(&file);
+
+		for(int i = 0 ; i < hashlen ; i++){
+
+			curr = fgetc(file);
+
+			if(curr == 0x00){
+				// No expiry. 
+
+				// Read string length. 
+
+				char* key = decodeString(&file); 
+/* 				int lenKey = parseLengthEncoding(&file); 
+
+				char* key = (char*)malloc(lenKey + 1); 
+
+				int start = 0 ; 
+
+				while(start < lenKey){
+
+					key[start] = fgetc(file);
+					start++;
+				}
+
+				key[lenKey] = '\0';  */
+				char* value = decodeString(&file); 
+
+				double expiry = -1; 
+
+				setValue(key, value , expiry); 
+
+				free(key);
+				free(value);
+
+				
+			}
+
+			else if(curr == 0xFC){
+				// Expiry in milliseconds. 
+
+				uint64_t millisecond = decodeMilliSeconds(&file);
+
+				double expiry = millisecond/1000; 
+
+				curr = fgetc(file);
+
+				if(curr == 0x00){
+					// String type; 
+
+					char* key = decodeString(&file);
+					char* value = decodeString(&file);
+
+
+					setValue(key , value, expiry);
+
+					free(key);
+					free(value);
+
+				}
+
+
+
+			}
+
+			else if(curr == 0xFD){
+
+				u_int32_t expiry = decodeSeconds(&file);
+
+				curr = fgetc(file);
+
+				if(curr == 0x00){
+
+					char* key = decodeString(&file);
+
+					char* value = decodeString(&file);
+
+					setValue(key, value, expiry); 
+
+					free(key);
+					free(value);
+
+
+				}
+
+			}
+
+
+		}
+
+
+		printf("Database imported successfully.\n"); 
+
+		fclose(file);
+
+		return 0; 
+
+
+
+
+}
 
 int makeNonBlocking(int fd){
 
@@ -202,9 +330,54 @@ int execute(int fd , char** arguments , int numArgs){
 
 	}
 
+	
+	else if(command == KEYS){
 
+		createDatabase();
+		char** keys ; 
+
+		int numKey = getKeys(&keys); 
+
+		if(keys == NULL || numKey == 0){
+
+			printf("No keys found.\n");
+
+		}
+		else{
+
+
+		char* toSend = encodeArray(keys,numKey );
+
+		for(int i = 0 ; i < numKey ; i++){
+
+
+
+			free(keys[i]);
+		}
+
+		send(fd , toSend , strlen(toSend), 0); 
+			
+		free(toSend);
+		free(keys); 
+	
+	}
+
+
+
+		
+		
+		
+
+
+
+
+
+
+	}
 		return 1; 
 }
+
+
 
 int handleConnection(int fd){
 
@@ -266,68 +439,90 @@ int main(int argc , char* argv[]) {
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
-	
-	dir = strdup(argv[2]);
+	if(argc == 5){
 
-	dbfilename = strdup(argv[4]); 
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	printf("Logs from your program will appear here!\n");
+		dir = strdup(argv[2]);
 
-	// Uncomment this block to pass the first stage
-	
-	int server_fd, client_addr_len;
-	struct sockaddr_in client_addr;
-	
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_fd == -1) {
-		printf("Socket creation failed: %s...\n", strerror(errno));
-		return 1;
+		dbfilename = strdup(argv[4]); 
+		// You can use print statements as follows for debugging, they'll be visible when running tests.
+		printf("Logs from your program will appear here!\n");
+
+		// Uncomment this block to pass the first stage
+
+		filePath = (char*)malloc(strlen(dir) + strlen(dbfilename) + 2); 
+
+		sprintf(filePath , "%s/%s", dir , dbfilename);
+
 	}
+
+/* 	if(fork() == 0){
+
+		createDatabase(); 
+
+	} */
 	
-	// Since the tester restarts your program quite often, setting SO_REUSEADDR
-	// ensures that we don't run into 'Address already in use' errors
-	int reuse = 1;
-	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-		printf("SO_REUSEADDR failed: %s \n", strerror(errno));
-		return 1;
-	}
 	
-	struct sockaddr_in serv_addr = { .sin_family = AF_INET ,
-									 .sin_port = htons(6379),
-									 .sin_addr = { htonl(INADDR_ANY) },
-									};
+/* 	else{
+
+		wait(0); */
+
+
 	
-	if (bind(server_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
-		printf("Bind failed: %s \n", strerror(errno));
-		return 1;
-	}
-	
-	int connection_backlog = 5;
-	if (listen(server_fd, connection_backlog) != 0) {
-		printf("Listen failed: %s \n", strerror(errno));
-		return 1;
-	}
-	
-	printf("Waiting for a client to connect...\n");
-	client_addr_len = sizeof(client_addr);
+		int server_fd, client_addr_len;
+		struct sockaddr_in client_addr;
+		
+		server_fd = socket(AF_INET, SOCK_STREAM, 0);
+		if (server_fd == -1) {
+			printf("Socket creation failed: %s...\n", strerror(errno));
+			return 1;
+		}
+		
+		// Since the tester restarts your program quite often, setting SO_REUSEADDR
+		// ensures that we don't run into 'Address already in use' errors
+		int reuse = 1;
+		if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+			printf("SO_REUSEADDR failed: %s \n", strerror(errno));
+			return 1;
+		}
+		
+		struct sockaddr_in serv_addr = { .sin_family = AF_INET ,
+										.sin_port = htons(6379),
+										.sin_addr = { htonl(INADDR_ANY) },
+										};
+		
+		if (bind(server_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
+			printf("Bind failed: %s \n", strerror(errno));
+			return 1;
+		}
+		
+		int connection_backlog = 5;
+		if (listen(server_fd, connection_backlog) != 0) {
+			printf("Listen failed: %s \n", strerror(errno));
+			return 1;
+		}
+		
+		printf("Waiting for a client to connect...\n");
+		client_addr_len = sizeof(client_addr);
 
-	int epoll_fd = epoll_create1(0) , nfds;
+		int epoll_fd = epoll_create1(0) , nfds;
 
-	struct epoll_event ev, events[MAX_CONNECTIONS];
+		struct epoll_event ev, events[MAX_CONNECTIONS];
 
-	makeNonBlocking(server_fd);
+		makeNonBlocking(server_fd);
 
-	ev.events = EPOLLIN;
-	ev.data.fd = server_fd; 
+		ev.events = EPOLLIN;
+		ev.data.fd = server_fd; 
 
-	if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
+		if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
 
-		perror("Error occured while adding file descriptor.\n");
-		return 3; 
+			perror("Error occured while adding file descriptor.\n");
+			return 3; 
 
-	} 
-	
-	while(1){
+		} 
+
+
+
+		while(1){
 	
 		nfds = epoll_wait(epoll_fd , events , MAX_CONNECTIONS , -1); 
 
@@ -373,7 +568,11 @@ int main(int argc , char* argv[]) {
 
 
 
-}
+	}
+
+	close(server_fd);
+
+//}
 
 
 
@@ -384,10 +583,14 @@ int main(int argc , char* argv[]) {
 	free(dir);
 	free(dbfilename); 
 
+	free(filePath);
+
 
 
 	
-	close(server_fd);
+
+	
+
 
 	return 0;
 }

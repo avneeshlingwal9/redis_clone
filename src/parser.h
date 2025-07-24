@@ -1,9 +1,4 @@
-#include <string.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <stdbool.h>
+
 #include "algorithms.h"
 
 
@@ -142,6 +137,11 @@ Commands parseCommand(char* comm){
 
 		return CONFIG; 
 	}
+	if(strcasecmp(comm, "keys") == 0){
+
+		return KEYS;
+
+	}
 
 	printf("Command not found: %s \n", comm);
 
@@ -216,5 +216,112 @@ char* encodeArray(char** values , int numEl){
 
    
 
+
+}
+
+int parseLengthEncoding(FILE** file){
+
+	int curr = fgetc(*file); 
+
+	// Get first two bits.
+	// Mask first two bits.
+
+	u_int8_t type = (curr & 0xC0) >> 6; 
+
+	u_int32_t size ; 
+
+	if(type == 0b00){
+
+		
+		size = (curr & 0x3F);
+
+
+
+
+
+	}
+	else if(type == 0b01){
+
+		u_int8_t msbBits = (curr & 0x3F);
+
+		u_int8_t lsBits = fgetc(*file);
+
+		size = (msbBits << 8) | lsBits; 
+
+
+	}
+
+	else if(type == 0b10){
+
+		size = 0; 
+
+		for(int i = 0 ; i < 4 ; i++){
+
+			size = (size << 8) | fgetc(*file); 
+
+			
+
+		}
+
+
+	}
+
+	return size; 
+
+}
+
+
+char *decodeString(FILE **file){
+
+	int len = parseLengthEncoding(file); 
+
+	char* val = (char*)malloc(sizeof(char) * len  + 1); 
+
+
+
+	int start = 0 ; 
+
+	while(start < len){
+
+		val[start] = fgetc(*file);
+		start++;
+	}
+
+	val[len] = '\0';
+
+	return val; 
+
+
+
+}
+
+u_int64_t decodeMilliSeconds(FILE **file){
+
+	u_int64_t val = 0 ; 
+
+
+	for(int i = 0 ; i < 8 ; i++){
+
+		val = val << 8 | fgetc(*file); 
+
+	}
+
+
+	return val; 
+
+
+}
+
+u_int32_t decodeSeconds(FILE **file){
+
+	u_int32_t val = 0; 
+
+	for(int i = 0 ; i < 4 ; i++)
+	{
+
+		val = val << 8 | fgetc(*file); 
+
+	}
+	return val; 
 
 }
