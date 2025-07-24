@@ -160,6 +160,8 @@ int execute(int fd , char** arguments , int numArgs){
 
 	free(arguments[0]); 
 
+	createDatabase();
+
 
 
 	if(command == PING){
@@ -194,6 +196,8 @@ int execute(int fd , char** arguments , int numArgs){
 		}
 
 	else if(command == GET){
+
+
 
 		char* key = arguments[1]; 
 
@@ -333,7 +337,6 @@ int execute(int fd , char** arguments , int numArgs){
 	
 	else if(command == KEYS){
 
-		createDatabase();
 		char** keys ; 
 
 		int numKey = getKeys(&keys); 

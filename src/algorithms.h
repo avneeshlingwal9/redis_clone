@@ -132,11 +132,12 @@ bool fileExists(char* path){
 
     if(file ){
 
+        fclose(file);
         return true;
 
     }
 
-    fclose(file); 
+     
 
     return false; 
 
@@ -149,7 +150,7 @@ int getKeys(char*** keys){
     int countKeys = HASH_COUNT(dictHead);
 
     if(countKeys == 0){
-        
+
         *keys = NULL; 
 
         return 0;
