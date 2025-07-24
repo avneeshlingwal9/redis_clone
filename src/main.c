@@ -160,7 +160,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 	free(arguments[0]); 
 
-	createDatabase();
+
 
 
 
@@ -470,7 +470,7 @@ int main(int argc , char* argv[]) {
 
 		wait(0); */
 
-
+		createDatabase();
 	
 		int server_fd, client_addr_len;
 		struct sockaddr_in client_addr;
