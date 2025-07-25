@@ -295,16 +295,18 @@ char *decodeString(FILE* file){
 
 }
 
-u_int64_t decodeMilliSeconds(FILE *file){
+long decodeMilliSeconds(FILE *file){
 
-	u_int64_t val = 0 ; 
+	unsigned long val = 0;
 
 
 	for(int i = 0 ; i < 8 ; i++){
 
-		u_int8_t v = fgetc(file);
+		unsigned long v = fgetc(file);
 
-		val = val | ((u_int64_t)v << (8*i));
+		val = val | (v << (8*i));
+
+		printf("The value after reading %d is %ld\n", i , val); 
 
 	}
 
@@ -316,21 +318,21 @@ u_int64_t decodeMilliSeconds(FILE *file){
 
 }
 
-u_int32_t decodeSeconds(FILE *file){
+long decodeSeconds(FILE *file){
 
-	u_int32_t val = 0; 
+	unsigned long val = 0; 
 
 	for(int i = 0 ; i < 4 ; i++)
 
 	
 	{
-		u_int8_t v = fgetc(file);
+		unsigned long v = fgetc(file);
 
-		val = val | ((u_int32_t)v << (8 * i));
+		val = val | (v << (8 * i));
 
 	}
 
 
-	return val*1000; 
+	return val; 
 
 }

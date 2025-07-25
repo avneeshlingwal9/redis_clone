@@ -75,7 +75,7 @@ int createDatabase(){
 
 				double expiry = -1; 
 
-				setValue(key, value , expiry); 
+				setValue(key, value , expiry , false); 
 
 				free(key);
 				free(value);
@@ -86,9 +86,9 @@ int createDatabase(){
 			else if(curr == 0xFC){
 				// Expiry in milliseconds. 
 
-				uint64_t millisecond = decodeMilliSeconds(file);
+				double expiry = decodeMilliSeconds(file);
 
-				double expiry = millisecond; 
+
 
 				curr = fgetc(file);
 
@@ -98,8 +98,10 @@ int createDatabase(){
 					char* key = decodeString(file);
 					char* value = decodeString(file);
 
+					printf("Decoded milliseconds: %f for key : %s\n", expiry , key); 
 
-					setValue(key , value, expiry);
+
+					setValue(key , value, expiry , true);
 
 					free(key);
 					free(value);
@@ -112,9 +114,11 @@ int createDatabase(){
 
 			else if(curr == 0xFD){
 
-				u_int32_t expiry = decodeSeconds(file);
+				long seconds = decodeSeconds(file);
 
 				curr = fgetc(file);
+
+				double expiry = seconds*1000;
 
 				if(curr == 0x00){
 
@@ -122,7 +126,9 @@ int createDatabase(){
 
 					char* value = decodeString(file);
 
-					setValue(key, value, expiry); 
+					setValue(key, value, expiry, true); 
+					printf("Decoded milliseconds: %f or key : %s\n", expiry, key); 
+					
 
 					free(key);
 					free(value);
@@ -234,7 +240,7 @@ int execute(int fd , char** arguments , int numArgs){
 		char* key = arguments[1];
 		char* value = arguments[2]; 
 
-		int expiry = -1; 
+		double expiry = -1; 
 
 		if(numArgs > 3){
 
@@ -246,7 +252,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 		}
 
-		setValue(key , value ,expiry);
+		setValue(key , value ,expiry, false);
 
 		free(key);
 		free(value);
@@ -471,6 +477,8 @@ int main(int argc , char* argv[]) {
 		wait(0); */
 
 		createDatabase();
+
+		printf("Size of long is: %ld\n", sizeof(long)); 
 	
 		int server_fd, client_addr_len;
 		struct sockaddr_in client_addr;

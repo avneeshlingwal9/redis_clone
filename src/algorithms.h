@@ -19,7 +19,7 @@ double getTimeDifference(struct timespec begin){
 
 
 
-void setValue(char* key , char* aValue , double expiry){
+void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
     ValueNode* value = (ValueNode*)malloc(sizeof(ValueNode)); 
 
@@ -33,7 +33,18 @@ void setValue(char* key , char* aValue , double expiry){
     
     timespec_get(&(value->currTime) , TIME_UTC);
 
-    value->expireTime = expiry; 
+    if(unixTime){
+
+        u_int64_t now = time(NULL);
+    
+        now = now* 1000; // Convert into millseconds. 
+
+        expiry = expiry - now; 
+
+    }
+
+
+    value->expireTime = expiry;
 
     HashMap* curr = (HashMap*)malloc(sizeof(HashMap));
 
@@ -80,6 +91,11 @@ char* getValue(char* key){
 
         return strdup(value->value);
 
+    }
+
+    else if(value->expireTime <= 0){
+
+        return NULL;
     }
 
     else{
