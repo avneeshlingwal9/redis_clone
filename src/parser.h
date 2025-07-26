@@ -143,6 +143,12 @@ Commands parseCommand(char* comm){
 
 	}
 
+	if(strcasecmp(comm , "INFO") == 0){
+
+		return INFO; 
+
+	}
+
 	printf("Command not found: %s \n", comm);
 
 	return UNKNOWN; 
@@ -174,6 +180,13 @@ Options parseOption(char* opt)
 		return PX;
 
 	}
+	if(strcasecmp(opt, "role") == 0){
+
+		return ROLE;
+
+	}
+
+	printf("Option %s not found.\n", opt); 
 
 	return OTHER;
 

@@ -20,6 +20,8 @@ char* dbfilename;
 
 char* filePath; 
 
+bool isMaster; 
+
 #define MAX_SIZE 2056
 int createDatabase(){
 
@@ -384,7 +386,45 @@ int execute(int fd , char** arguments , int numArgs){
 
 
 	}
-		return 1; 
+	
+	else if(command == INFO){
+
+		char* opt = arguments[1]; 
+
+		Options option = parseOption(opt); 
+
+		free(opt);
+
+		if(option == ROLE){
+
+			if(isMaster){
+
+				char* val = "role:master"; 
+
+				char* toSend = encodeStr(val); 
+
+				send(fd , toSend , strlen(toSend), 0); 
+
+				free(toSend); 
+
+			}
+
+			else{
+				char* val = "role:slave";
+
+				char* toSend = encodeStr(val); 
+
+				send(fd , toSend, strlen(toSend),0); 
+
+				free(toSend); 
+			}
+
+		}
+		
+
+	}
+	
+	return 1; 
 }
 
 
@@ -485,6 +525,8 @@ int main(int argc , char* argv[]) {
 /* 	else{
 
 		wait(0); */
+
+		isMaster = port == 6379 ? true : false ; 
 
 		createDatabase();
 

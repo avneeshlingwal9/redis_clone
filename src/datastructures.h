@@ -21,12 +21,14 @@ typedef enum {
     ECHO,
     CONFIG,
     KEYS,
+    INFO,
     
 
 }Commands;
 
 typedef enum{
     PX,
+    ROLE, 
     OTHER, 
 
 }Options; 
