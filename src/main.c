@@ -418,14 +418,17 @@ int execute(int fd , char** arguments , int numArgs){
 
 			}
 
-			char* replid = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb:0";
+			char* replid = "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+			char* ofset = "master_repl_offset:0";
 
-			char* toEncode = (char*)malloc(strlen(role) + strlen(replid) + 1); 
+			char* toEncode = (char*)malloc(strlen(role) + strlen(replid) + strlen(ofset) +  1); 
 
 
 			strcat(toEncode , role);
 
 			strcat(toEncode , replid);
+
+			strcat(toEncode, ofset);
 
 			char* toSend = encodeStr(toEncode);
 
