@@ -485,6 +485,110 @@ int handleConnection(int fd){
 
 }
 
+int connectParent(char* args){
+
+	char* parentAddress = strtok(parent , " ");
+	char* parentPortStr =  strtok(NULL , " ");
+
+	int parentPort = atoi(parentPortStr); 
+
+	printf("Parent address is %s\n", parentAddress);
+			
+	if(strcmp(parentAddress, "localhost") == 0){
+
+				parentAddress = "127.0.0.1"; 
+
+	}
+
+	struct sockaddr_in parentInfo = {
+				
+				.sin_family = AF_INET,
+				.sin_port = htons(parentPort), 
+			};
+
+	inet_pton(AF_INET , parentAddress , &parentInfo.sin_addr);
+
+
+	int parentFd = socket(AF_INET , SOCK_STREAM , 0);
+	if(connect(parentFd , (struct sockaddr*)&parentInfo , sizeof(parentInfo)) == -1){
+
+			printf("Not able to connect to parent.\n"); 
+			return 1; 
+
+	}
+
+
+
+
+	char* command[] = {"PING"}; 
+	int commandLen = 1; 
+	
+	char* response = sendCommand(parentFd , command , commandLen); 
+
+	if(response == NULL){
+
+		printf("No response by parent.\n"); 
+		return 1; 
+
+	}
+
+	free(response);
+
+	char* command2[3] = {"REPLCONF", "listening-port"};
+
+	command2[2] = parentPortStr; 
+
+	commandLen = 3; 
+
+	response = sendCommand(parentFd, command2 , commandLen); 
+
+	if(response == NULL){
+
+		printf("No response by parent.\n");
+		return 1; 
+
+	}
+
+	free(response); 
+
+	char* command3[] = {"REPLCONF", "capa", "psync2"};
+
+	response = sendCommand(parentFd, command3 , commandLen);
+
+	if(response == NULL){
+		printf("No response by parent.\n");
+		return 1; 
+	}
+	free(response); 
+
+	char* command4[] = {"PSYNC", "?", "-1"};
+
+	response = sendCommand(parentFd, command4 , commandLen);
+
+	free(response);
+
+	
+
+
+
+
+
+
+
+
+	
+
+
+
+
+	return 0;
+			
+
+
+
+
+}
+
 
 
 
@@ -614,45 +718,8 @@ int main(int argc , char* argv[]) {
 
 		if(!isMaster && parent != NULL){
 
-			char* parentAddress = strtok(parent , " ");
-			int parentPort =  atoi(strtok(NULL , " "));
-
-			printf("Parent address is %s\n", parentAddress);
+			connectParent(argv[4]); 
 			
-			if(strcmp(parentAddress, "localhost") == 0){
-
-				parentAddress = "127.0.0.1"; 
-
-			}
-
-			struct sockaddr_in parentInfo = {
-				
-				.sin_family = AF_INET,
-				.sin_port = htons(parentPort), 
-			};
-
-			inet_pton(AF_INET , parentAddress , &parentInfo.sin_addr);
-
-
-			int parentFd = socket(AF_INET , SOCK_STREAM , 0);
-			if(connect(parentFd , (struct sockaddr*)&parentInfo , sizeof(parentInfo)) == -1){
-
-				printf("Not able to connect to parent.\n"); 
-				return 1; 
-
-			}
-
-
-			char *command[] = {"PING"}; 
-
-			char* toSend = encodeArray(command , 1); 
-
-			send(parentFd , toSend , strlen(toSend), 0);
-
-			free(toSend); 
-
-
-
 		}
 
 

@@ -4,7 +4,7 @@
 
 
 
-char * parseBulkString( char ** input , int length){
+char* parseBulkString( char ** input , int length){
 
 	char *str = (char*)malloc(length + 1);
 
@@ -347,5 +347,58 @@ long decodeSeconds(FILE *file){
 
 
 	return val; 
+
+}
+
+char* parseString(char** input){
+
+	int len = parseLen(input); 
+
+	char* str = parseBulkString(input, len); 
+
+	return str; 
+
+
+
+}
+
+char* sendCommand(int fd , char* commands[], int commandLen){
+
+    char* toSend = encodeArray(commands , commandLen); 
+
+	send(fd , toSend , strlen(toSend),0);
+
+	char* buf = (char*)malloc(MAX_SIZE); 
+
+	char* input = buf; 
+
+	int bytesRead = read(fd, buf , MAX_SIZE); 
+
+	if(bytesRead == 0){
+
+		printf("No bytes were read.\n"); 
+		return NULL; 
+
+	}
+	
+	char* response = parseString(&input); 
+
+	if(response == NULL){
+
+		printf("No response was received.\n");
+		return NULL; 
+	}
+
+	printf("Response is: %s\n", response);
+
+    
+
+
+
+	free(buf); 
+
+    return response; 
+
+
 
 }

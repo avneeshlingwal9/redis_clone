@@ -166,6 +166,7 @@ void freeDictionary(){
 
 int getKeys(char*** keys){
 
+
     int countKeys = HASH_COUNT(dictHead);
 
     if(countKeys == 0){
@@ -199,3 +200,4 @@ int getKeys(char*** keys){
 
 
 }
+
