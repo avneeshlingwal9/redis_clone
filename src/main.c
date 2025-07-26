@@ -485,7 +485,7 @@ int handleConnection(int fd){
 
 }
 
-int connectParent(char* args , int port){
+int connectParent(char* args , char* port){
 
 	char* parentAddress = strtok(parent , " ");
 	char* parentPortStr =  strtok(NULL , " ");
@@ -536,7 +536,7 @@ int connectParent(char* args , int port){
 
 	char* command2[3] = {"REPLCONF", "listening-port"};
 
-	command2[2] = stoi(port); 
+	command2[2] = port; 
 
 	commandLen = 3; 
 
@@ -602,6 +602,8 @@ int main(int argc , char* argv[]) {
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 
+	char* portStr = NULL; 
+
 	int port = 6379;
 
 	if(argc > 1){
@@ -627,6 +629,7 @@ int main(int argc , char* argv[]) {
 		else if(strcasecmp(argv[1], "--port") == 0){
 
 			port = atoi(argv[2]);
+			portStr = argv[2]; 
 
 			printf("Port number is: %d\n", port); 
 
@@ -718,7 +721,7 @@ int main(int argc , char* argv[]) {
 
 		if(!isMaster && parent != NULL){
 
-			connectParent(argv[4], port); 
+			connectParent(argv[4], portStr); 
 			
 		}
 
