@@ -180,9 +180,9 @@ Options parseOption(char* opt)
 		return PX;
 
 	}
-	if(strcasecmp(opt, "role") == 0){
+	if(strcasecmp(opt, "replication") == 0){
 
-		return ROLE;
+		return REPLICATION;
 
 	}
 

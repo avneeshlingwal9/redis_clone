@@ -28,7 +28,7 @@ typedef enum {
 
 typedef enum{
     PX,
-    ROLE, 
+    REPLICATION, 
     OTHER, 
 
 }Options; 

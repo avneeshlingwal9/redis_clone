@@ -395,7 +395,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 		free(opt);
 
-		if(option == ROLE){
+		if(option == REPLICATION){
 
 			if(isMaster){
 
