@@ -22,6 +22,8 @@ char* filePath;
 
 bool isMaster; 
 
+char* parent; 
+
 #define MAX_SIZE 2056
 int createDatabase(){
 
@@ -492,28 +494,46 @@ int main(int argc , char* argv[]) {
 
 	int port = 6379;
 
-	if(argc == 5){
+	if(argc > 1){
 
-		dir = strdup(argv[2]);
+		if(strcmp(argv[1], "--dir") == 0 && argc > 2){
 
-		dbfilename = strdup(argv[4]); 
-		// You can use print statements as follows for debugging, they'll be visible when running tests.
-		printf("Logs from your program will appear here!\n");
+			dir = strdup(argv[2]);
 
-		// Uncomment this block to pass the first stage
+			if(argc >= 3 && strcmp(argv[3],"--dbfilename") == 0){
 
-		filePath = (char*)malloc(strlen(dir) + strlen(dbfilename) + 2); 
+				dbfilename = strdup(argv[4]);
 
-		sprintf(filePath , "%s/%s", dir , dbfilename);
+				filePath = (char*)malloc(strlen(dir) + strlen(dbfilename) + 2); 
+
+				sprintf(filePath , "%s/%s", dir , dbfilename);
+
+
+			}
+			
+
+		}
+
+		else if(strcasecmp(argv[1], "--port") == 0){
+
+			port = atoi(argv[2]);
+
+
+			if(argc >= 3 && strcmp(argv[3], "--replicaof") == 0){
+
+				parent = argv[4]; 
+
+
+			}
+
+
+		}
+
 
 	}
 
-	if(argc == 3){
 
-		port = atoi(argv[2]);
-		
 
-	}
 
 /* 	if(fork() == 0){
 
