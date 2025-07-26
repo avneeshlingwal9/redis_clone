@@ -449,6 +449,9 @@ int main(int argc , char* argv[]) {
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
+
+	int port = 6379;
+
 	if(argc == 5){
 
 		dir = strdup(argv[2]);
@@ -462,6 +465,13 @@ int main(int argc , char* argv[]) {
 		filePath = (char*)malloc(strlen(dir) + strlen(dbfilename) + 2); 
 
 		sprintf(filePath , "%s/%s", dir , dbfilename);
+
+	}
+
+	if(argc == 3){
+
+		port = atoi(argv[2]);
+		
 
 	}
 
@@ -498,7 +508,7 @@ int main(int argc , char* argv[]) {
 		}
 		
 		struct sockaddr_in serv_addr = { .sin_family = AF_INET ,
-										.sin_port = htons(6379),
+										.sin_port = htons(port),
 										.sin_addr = { htonl(INADDR_ANY) },
 										};
 		
