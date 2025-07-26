@@ -24,6 +24,10 @@ bool isMaster;
 
 char* parent; 
 
+char* replicationId; 
+
+int replicationOffset; 
+
 #define MAX_SIZE 2056
 int createDatabase(){
 
@@ -400,27 +404,42 @@ int execute(int fd , char** arguments , int numArgs){
 
 		if(option == REPLICATION){
 
+			char* role; 
+
 			if(isMaster){
 
-				char* val = "role:master"; 
+				role = "role:master"; 
 
-				char* toSend = encodeStr(val); 
-
-				send(fd , toSend , strlen(toSend), 0); 
-
-				free(toSend); 
 
 			}
 
 			else{
-				char* val = "role:slave";
+				role = "role:slave";
 
-				char* toSend = encodeStr(val); 
-
-				send(fd , toSend, strlen(toSend),0); 
-
-				free(toSend); 
 			}
+
+			char* replid = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb:0";
+
+			char* toEncode = (char*)malloc(strlen(role) + strlen(replid) + 1); 
+
+
+			strcat(toEncode , role);
+
+			strcat(toEncode , replid);
+
+			char* toSend = encodeStr(toEncode);
+
+			free(toEncode);
+
+			send(fd , toSend , strlen(toSend), 0); 
+
+
+			free(toSend); 
+
+
+
+
+		
 
 		}
 		
@@ -552,6 +571,11 @@ int main(int argc , char* argv[]) {
 		isMaster = port == 6379 ? true : false ; 
 
 		createDatabase();
+
+		replicationId = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+
+		replicationOffset = 0;
+
 
 
 	
