@@ -102,7 +102,8 @@ int createDatabase(){
 					char* key = decodeString(file);
 					char* value = decodeString(file);
 
-					printf("Decoded milliseconds: %f for key : %s\n", expiry , key); 
+
+
 
 
 					setValue(key , value, expiry , true);
@@ -131,7 +132,7 @@ int createDatabase(){
 					char* value = decodeString(file);
 
 					setValue(key, value, expiry, true); 
-					printf("Decoded milliseconds: %f or key : %s\n", expiry, key); 
+
 					
 
 					free(key);
@@ -500,7 +501,7 @@ int main(int argc , char* argv[]) {
 
 			dir = strdup(argv[2]);
 
-			if(argc >= 3 && strcmp(argv[3],"--dbfilename") == 0){
+			if(argc >= 4 && strcmp(argv[3],"--dbfilename") == 0){
 
 				dbfilename = strdup(argv[4]);
 
@@ -518,8 +519,10 @@ int main(int argc , char* argv[]) {
 
 			port = atoi(argv[2]);
 
+			printf("Port number is: %d\n", port); 
 
-			if(argc >= 3 && strcmp(argv[3], "--replicaof") == 0){
+
+			if(argc >= 4 && strcmp(argv[3], "--replicaof") == 0){
 
 				parent = argv[4]; 
 
@@ -550,7 +553,7 @@ int main(int argc , char* argv[]) {
 
 		createDatabase();
 
-		printf("Size of long is: %ld\n", sizeof(long)); 
+
 	
 		int server_fd, client_addr_len;
 		struct sockaddr_in client_addr;

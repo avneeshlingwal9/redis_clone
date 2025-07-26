@@ -319,7 +319,7 @@ long decodeMilliSeconds(FILE *file){
 
 		val = val | (v << (8*i));
 
-		printf("The value after reading %d is %ld\n", i , val); 
+
 
 	}
 

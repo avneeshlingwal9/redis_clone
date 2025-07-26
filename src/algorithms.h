@@ -55,7 +55,7 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
         return; 
 
     }
-    printf("Key is %s, value is %s, with expiry %f\n", key , value->value , value->expireTime); 
+
 
 
 
