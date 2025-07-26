@@ -4,6 +4,25 @@
 
 HashMap *dictHead = NULL;
 
+bool fileExists(char* path){
+
+    FILE* file = fopen(path , "rb");
+
+    if(file ){
+
+        fclose(file);
+        return true;
+
+    }
+
+     
+
+    return false; 
+
+
+}
+
+
 double getTimeDifference(struct timespec begin){
 
 	struct timespec curr; 
@@ -143,23 +162,6 @@ void freeDictionary(){
 
 }
 
-bool fileExists(char* path){
-
-    FILE* file = fopen(path , "rb");
-
-    if(file ){
-
-        fclose(file);
-        return true;
-
-    }
-
-     
-
-    return false; 
-
-
-}
 
 
 int getKeys(char*** keys){

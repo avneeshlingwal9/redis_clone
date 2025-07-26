@@ -12,23 +12,6 @@
 #include "parser.h"
 #include <sys/wait.h>
 
-#define MAX_CONNECTIONS 32
-
-char* dir; 
-
-char* dbfilename; 
-
-char* filePath; 
-
-bool isMaster; 
-
-char* parent; 
-
-char* replicationId; 
-
-int replicationOffset; 
-
-#define MAX_SIZE 2056
 int createDatabase(){
 
 	if(!fileExists(filePath)){
@@ -548,7 +531,6 @@ int main(int argc , char* argv[]) {
 
 				parent = argv[4]; 
 
-
 			}
 
 
@@ -608,6 +590,8 @@ int main(int argc , char* argv[]) {
 			printf("Bind failed: %s \n", strerror(errno));
 			return 1;
 		}
+
+
 		
 		int connection_backlog = 5;
 		if (listen(server_fd, connection_backlog) != 0) {
@@ -624,6 +608,54 @@ int main(int argc , char* argv[]) {
 
 		makeNonBlocking(server_fd);
 
+
+
+
+
+		if(!isMaster && parent != NULL){
+
+			char* parentAddress = strtok(parent , " ");
+			int parentPort =  atoi(strtok(NULL , " "));
+
+			printf("Parent address is %s\n", parentAddress);
+			
+			if(strcmp(parentAddress, "localhost") == 0){
+
+				parentAddress = "127.0.0.1"; 
+
+			}
+
+			struct sockaddr_in parentInfo = {
+				
+				.sin_family = AF_INET,
+				.sin_port = htons(parentPort), 
+			};
+
+			inet_pton(AF_INET , parentAddress , &parentInfo.sin_addr);
+
+
+			int parentFd = socket(AF_INET , SOCK_STREAM , 0);
+			if(connect(parentFd , (struct sockaddr*)&parentInfo , sizeof(parentInfo)) == -1){
+
+				printf("Not able to connect to parent.\n"); 
+				return 1; 
+
+			}
+
+
+			char *command[] = {"PING"}; 
+
+			char* toSend = encodeArray(command , 1); 
+
+			send(parentFd , toSend , strlen(toSend), 0);
+
+			free(toSend); 
+
+
+
+		}
+
+
 		ev.events = EPOLLIN;
 		ev.data.fd = server_fd; 
 
@@ -633,8 +665,6 @@ int main(int argc , char* argv[]) {
 			return 3; 
 
 		} 
-
-
 
 		while(1){
 	
