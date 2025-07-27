@@ -672,7 +672,7 @@ int connectParent(char* args , char* port){
 
 	char* buf[MAX_SIZE];
 
-	read(parentFd, buf , MAX_SIZE); 
+	recv(parentFd, buf , 88 , 0); 
 
 
 	return parentFd;
