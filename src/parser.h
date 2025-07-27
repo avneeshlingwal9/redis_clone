@@ -350,7 +350,7 @@ long decodeSeconds(FILE *file){
 
 }
 
-char* parseString(char** input){
+/* char* parseString(char** input){
 
 	int len = parseLen(input); 
 
@@ -360,7 +360,7 @@ char* parseString(char** input){
 
 
 
-}
+} */
 
 char* sendCommand(int fd , char* commands[], int commandLen){
 
@@ -374,18 +374,31 @@ char* sendCommand(int fd , char* commands[], int commandLen){
 
 	int bytesRead = read(fd, buf , MAX_SIZE); 
 
+	if(bytesRead == -1){
+		printf("Error in reading.");
+
+		free(buf);
+		return NULL; 
+	}
+
 	if(bytesRead == 0){
 
 		printf("No bytes were read.\n"); 
+		free(buf);
+
 		return NULL; 
 
 	}
 	
-	char* response = parseString(&input); 
+	int len = parseLen(&input);
+
+	char* response = parseBulkString(&input, len); 
+
 
 	if(response == NULL){
 
 		printf("No response was received.\n");
+		free(buf); 
 		return NULL; 
 	}
 

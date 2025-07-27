@@ -181,7 +181,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 
 
-			sprintf(toSend , "$%d\r\n%s\r\n" , (int)strlen(arg), arg);
+			snprintf(toSend , strlen(arg) + digits + 6 ,  "$%d\r\n%s\r\n" , (int)strlen(arg), arg);
 
 
 			
@@ -387,7 +387,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 		if(option == REPLICATION){
 
-			char* role; 
+			char* role = NULL; 
 
 			if(isMaster){
 
@@ -404,16 +404,31 @@ int execute(int fd , char** arguments , int numArgs){
 			char* replid = "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
 			char* ofset = "master_repl_offset:0";
 
+			
+
 			char* toEncode = (char*)malloc(strlen(role) + strlen(replid) + strlen(ofset) +  1); 
+			
+			if(toEncode == NULL){
+				printf("Not able to allocate memory.\n");
+				return 1; 
+			}
 
+			strcpy(toEncode , role);
 
-			strcat(toEncode , role);
+			printf("String to encode: %s\n", toEncode);
 
 			strcat(toEncode , replid);
 
+			printf("String to encode: %s\n", toEncode);
+
 			strcat(toEncode, ofset);
 
+			printf("String to encode: %s\n", toEncode);
+
+
 			char* toSend = encodeStr(toEncode);
+
+			printf("To send %s\n", toSend);
 
 			free(toEncode);
 
@@ -618,7 +633,7 @@ int main(int argc , char* argv[]) {
 
 				filePath = (char*)malloc(strlen(dir) + strlen(dbfilename) + 2); 
 
-				sprintf(filePath , "%s/%s", dir , dbfilename);
+				snprintf(filePath , strlen(dir) + strlen(dbfilename)+ 2, "%s/%s", dir , dbfilename);
 
 
 			}
