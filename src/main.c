@@ -251,29 +251,31 @@ int execute(int fd , char** arguments , int numArgs){
 
 		free(key);
 		free(value);
+		if(isMaster){
 
-		send(fd , RESP_OK , strlen(RESP_OK), 0); 
 
-		if(fork() == 0){
+			send(fd , RESP_OK , strlen(RESP_OK), 0); 
 
-			for(int i = 0 ; i < replicaOffset; i++){
+			if(fork() == 0){
+
+				for(int i = 0 ; i < replicaOffset; i++){
 
 				
-				for(int j = 0 ; j < commandBufferOffset; j++){
+					for(int j = 0 ; j < commandBufferOffset; j++){
 
-					send(replicaList[i], commandBuffer[j], strlen(commandBuffer[j]),0);
+						send(replicaList[i], commandBuffer[j], strlen(commandBuffer[j]),0);
+
+
+
+
+					}
+
+
 
 
 
 
 				}
-
-
-
-
-
-
-			}
 
 			
 
@@ -281,15 +283,16 @@ int execute(int fd , char** arguments , int numArgs){
 
 
 
+			}
+
+			for(int j = 0; j < commandBufferOffset; j++){
+				free(commandBuffer[j]);
+			}
+
+			commandBufferOffset = 0 ; 
+
+			wait(NULL);
 		}
-
-		for(int j = 0; j < commandBufferOffset; j++){
-			free(commandBuffer[j]);
-		}
-
-		commandBufferOffset = 0 ; 
-
-		wait(NULL);
 
 
 
