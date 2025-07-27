@@ -464,6 +464,61 @@ int execute(int fd , char** arguments , int numArgs){
 
 		free(toSend);
 
+		FILE *file = fopen("empty.rdb", "rb"); 
+
+		if(file == NULL){
+
+			printf("Not able to open file.\n");
+			return 1; 
+		}
+
+		fseek(file, 0 , SEEK_END);
+
+		size_t size =  ftell(file);
+
+		rewind(file); 
+
+		unsigned char* fileContent = (unsigned char*)malloc(sizeof(unsigned char)* size);
+
+		if(fileContent == NULL){
+
+			printf("Not able to allocate memory.\n");
+
+			fclose(file); 
+
+			return 1; 
+
+		}
+
+		fread(fileContent, 1 , size , file);
+
+		int digits = snprintf(NULL, 0 , "%d", (int)size);
+		
+		toSend = (char*)malloc(digits + 4 + size); 
+
+		if(toSend == NULL){
+
+			printf("Not able to allocate memory for sending.\n"); 
+
+			fclose(file);
+
+			free(fileContent);
+
+		}
+
+		snprintf(toSend, digits + 4 + size , "$%d/r/n%s", (int)size, fileContent);
+
+		free(fileContent);
+
+		fclose(file);
+
+		send(fd , toSend, strlen(toSend), 0); 
+
+		free(toSend); 
+
+
+
+
 	}
 
 	return 1; 
