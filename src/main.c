@@ -254,6 +254,42 @@ int execute(int fd , char** arguments , int numArgs){
 
 		send(fd , RESP_OK , strlen(RESP_OK), 0); 
 
+		if(fork() == 0){
+
+			for(int i = 0 ; i < replicaOffset; i++){
+
+				
+				for(int j = 0 ; j < commandBufferOffset; j++){
+
+					send(replicaList[i], commandBuffer[j], strlen(commandBuffer[j]),0);
+
+
+
+
+				}
+
+
+
+
+
+
+			}
+
+			
+
+
+
+
+
+		}
+
+		for(int j = 0; j < commandBufferOffset; j++){
+			free(commandBuffer[j]);
+		}
+
+		commandBufferOffset = 0 ; 
+
+		wait(NULL);
 
 
 
@@ -470,14 +506,8 @@ int execute(int fd , char** arguments , int numArgs){
 
 		sendRDB(fd); 
 
-		for(int i = 0 ; i < commandBufferOffset; i++){
+		replicaList[replicaOffset++] = fd; 
 
-			send(fd , commandBuffer[i] , strlen(commandBuffer[i]), 0);
-			free(commandBuffer[i]);
-
-		}
-
-		commandBufferOffset = 0; 
 
 
 	}
