@@ -447,6 +447,25 @@ int execute(int fd , char** arguments , int numArgs){
 
 	}
 	
+	else if(command == REPLCONF){
+
+		send(fd, RESP_OK, strlen(RESP_OK),0);
+
+
+	}
+
+	else if(command == PSYNC){
+
+		char* response = "FULLRESYNC8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb0";
+
+		char* toSend = encodeStr(response);
+
+		send(fd , toSend, strlen(toSend), 0);
+
+		free(toSend);
+
+	}
+
 	return 1; 
 }
 

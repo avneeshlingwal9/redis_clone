@@ -148,6 +148,16 @@ Commands parseCommand(char* comm){
 		return INFO; 
 
 	}
+	if(strcasecmp(comm, "replconf") == 0){
+		
+		return REPLCONF;
+	}
+
+	if(strcasecmp(comm, "psync") == 0){
+
+		return PSYNC;
+
+	}
 
 	printf("Command not found: %s \n", comm);
 
@@ -184,6 +194,20 @@ Options parseOption(char* opt)
 
 		return REPLICATION;
 
+	}
+
+	if(strcasecmp(opt , "listening-port") == 0){
+
+		return LISTENINGPORT; 
+
+	}
+
+	if(strcasecmp(opt, "capa") == 0){
+		return CAPA;
+	}
+	if(strcasecmp(opt, "psync2") == 0){
+		
+		return PSYNC2;
 	}
 
 	printf("Option %s not found.\n", opt); 

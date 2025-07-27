@@ -45,6 +45,8 @@ typedef enum {
     CONFIG,
     KEYS,
     INFO,
+    REPLCONF,
+    PSYNC,
     
 
 }Commands;
@@ -53,6 +55,11 @@ typedef enum{
     PX,
     REPLICATION, 
     OTHER, 
+    LISTENINGPORT,
+    CAPA, 
+    PSYNC2,
+
+
 
 }Options; 
 
