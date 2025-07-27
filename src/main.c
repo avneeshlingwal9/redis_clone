@@ -464,63 +464,34 @@ int execute(int fd , char** arguments , int numArgs){
 
 		free(toSend);
 
-		FILE *file = fopen("empty.rdb", "rb"); 
 
-		if(file == NULL){
+		int numBytes = strlen(EMPTYRDB);
+		int numChar = numBytes/2;
 
-			printf("Not able to open file.\n");
-			perror("Error opening file.\n");
-			return 1; 
+		char fileContents[numChar]; 
+
+		for(int i = 0 ; i < numBytes - 1; i+= 2){
+
+			char curr[] = {EMPTYRDB[i], EMPTYRDB[i + 1], '\0'};
+			// Converting hex. 
+
+			char byte = (char)strtol(curr , NULL, 16);
+			fileContents[i/2] = byte; 
 		}
 
-		fseek(file, 0 , SEEK_END);
+		numChar = strlen(fileContents); 
 
-		size_t size =  ftell(file);
-
-		rewind(file); 
-
-		unsigned char* fileContent = (unsigned char*)malloc(sizeof(unsigned char)* size);
-
-		if(fileContent == NULL){
-
-			printf("Not able to allocate memory.\n");
-
-			fclose(file); 
-
-			return 1; 
-
-		}
-
-		fread(fileContent, 1 , size , file);
-
-		int digits = snprintf(NULL, 0 , "%d", (int)size);
+		int digitLen = snprintf(NULL, 0 , "%d", numChar); 
+		toSend = (char*)malloc(digitLen + 4 + numChar);
 		
-		toSend = (char*)malloc(digits + 4 + size); 
-
-		if(toSend == NULL){
-
-			printf("Not able to allocate memory for sending.\n"); 
-
-			fclose(file);
-
-			free(fileContent);
-
-		}
-
-		snprintf(toSend, digits + 4 + size , "$%d/r/n%s", (int)size, fileContent);
-
-		free(fileContent);
-
-		fclose(file);
+		sprintf(toSend, "$%d\r\n%s", numChar, fileContents);
 
 		send(fd , toSend, strlen(toSend), 0); 
 
-		free(toSend); 
-
-
-
-
+		free(toSend);
 	}
+
+
 
 	return 1; 
 }
