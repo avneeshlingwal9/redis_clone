@@ -666,23 +666,32 @@ int connectParent(char* args , char* port){
 
 	response = sendCommand(parentFd, command4 , commandLen);
 
+
+
 	free(response);
 
-	
+	char* buf[MAX_SIZE];
+
+	read(parentFd, buf , MAX_SIZE); 
 
 
-
-
-
-
-
+	return parentFd;
 
 	
 
 
 
 
-	return 0;
+
+
+
+
+	
+
+
+
+
+
 			
 
 
@@ -818,11 +827,11 @@ int main(int argc , char* argv[]) {
 
 
 
-
+		int parent_fd = -1;
 
 		if(!isMaster && parent != NULL){
 
-			connectParent(argv[4], portStr); 
+			parent_fd = connectParent(argv[4], portStr); 
 			
 		}
 
@@ -836,6 +845,19 @@ int main(int argc , char* argv[]) {
 			return 3; 
 
 		} 
+		if(parent_fd != -1){
+
+			ev.events = EPOLLIN;
+			ev.data.fd = parent_fd;
+
+			if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , parent_fd , &ev) != 0){
+
+				perror("Error occured during adding file descriptor.\n");
+				return 3; 
+
+			}
+
+		}
 
 		while(1){
 	
