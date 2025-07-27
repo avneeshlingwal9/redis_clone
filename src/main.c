@@ -156,7 +156,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 	Commands command = parseCommand(arguments[0]); 
 
-	free(arguments[0]); 
+	
 
 
 
@@ -227,6 +227,9 @@ int execute(int fd , char** arguments , int numArgs){
 	}
 
 	else if(command == SET){
+
+
+		addToBuffer(arguments , numArgs); 
 
 
 		char* key = arguments[1];
@@ -465,33 +468,22 @@ int execute(int fd , char** arguments , int numArgs){
 		free(toSend);
 
 
-		int numBytes = strlen(EMPTYRDB);
-		int numChar = numBytes/2;
+		sendRDB(fd); 
 
-		char fileContents[numChar]; 
+		for(int i = 0 ; i < commandBufferOffset; i++){
 
-		for(int i = 0 ; i < numBytes - 1; i+= 2){
+			send(fd , commandBuffer[i] , strlen(commandBuffer[i]), 0);
+			free(commandBuffer[i]);
 
-			char curr[] = {EMPTYRDB[i], EMPTYRDB[i + 1], '\0'};
-			// Converting hex. 
-
-			char byte = (char)strtol(curr , NULL, 16);
-			fileContents[i/2] = byte; 
 		}
 
-		numChar = strlen(fileContents); 
+		commandBufferOffset = 0; 
 
-		int digitLen = snprintf(NULL, 0 , "%d", numChar); 
-		toSend = (char*)malloc(digitLen + 4 + numChar);
-		
-		sprintf(toSend, "$%d\r\n%s", numChar, fileContents);
 
-		send(fd , toSend, strlen(toSend), 0); 
-
-		free(toSend);
 	}
 
 
+	free(arguments[0]);
 
 	return 1; 
 }

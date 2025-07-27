@@ -201,36 +201,41 @@ int getKeys(char*** keys){
 
 }
 
-/* void createEmptyRDB(){
-    char* contents = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2";
-    FILE* file = fopen("empty.rdb", "wb");
+int sendRDB(int fd){
+    int numBytes = strlen(EMPTYRDB);
+		int numChar = numBytes/2;
 
-    if(file == NULL){
+		char fileContents[numChar]; 
 
-        perror("Not able to open file.\n");
-        return; 
-    }
-    
-    fprintf(file, contents);
+		for(int i = 0 ; i < numBytes - 1; i+= 2){
 
-    fclose(file);
+			char curr[] = {EMPTYRDB[i], EMPTYRDB[i + 1], '\0'};
+			// Converting hex. 
 
+			char byte = (char)strtol(curr , NULL, 16);
+			fileContents[i/2] = byte; 
+		}
 
+		numChar = strlen(fileContents); 
+
+		int digitLen = snprintf(NULL, 0 , "%d", numChar); 
+		char* toSend = (char*)malloc(digitLen + 4 + numChar);
+
+        if(toSend == NULL){
+            printf("Not able to allocate memory for sending RDB data.\n"); 
+            return 1; 
+        }
+		
+		sprintf(toSend, "$%d\r\n%s", numChar, fileContents);
+
+		send(fd , toSend, strlen(toSend), 0); 
+
+		free(toSend);
 }
 
-char hexToBinary(char input){
-
-    switch(input){
-
-        case '0': 
-            return '0';
-
-
-    }
-    
 
 
 
 
-} */
+
 

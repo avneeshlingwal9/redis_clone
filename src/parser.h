@@ -439,3 +439,17 @@ char* sendCommand(int fd , char* commands[], int commandLen){
 
 
 }
+
+void addToBuffer(char** arguments , int numEl){
+
+    if(commandBufferOffset == MAX_COMMANDS){
+        
+        printf("Not able to add to buffer.\n");
+        return; 
+    }
+
+    commandBuffer[commandBufferOffset++] = encodeArray(arguments, numEl);
+
+
+
+}
