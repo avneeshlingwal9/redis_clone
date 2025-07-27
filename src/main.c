@@ -469,6 +469,7 @@ int execute(int fd , char** arguments , int numArgs){
 		if(file == NULL){
 
 			printf("Not able to open file.\n");
+			perror("Error opening file.\n");
 			return 1; 
 		}
 
