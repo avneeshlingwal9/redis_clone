@@ -546,6 +546,19 @@ int handleConnection(int fd){
 
 	char** arguments = (char**)malloc(numArgs* sizeof(char*)); 
 
+	if(!isMaster){
+		printf("The commands are: ");
+
+		for(int i = 0 ; i < numArgs ; i++){
+
+			printf("%s ", arguments[i]);
+
+		}
+
+		printf("\n");
+
+	}
+
 	if(parseArray(&input , end , &arguments , numArgs) == true){
 
 		execute(fd , arguments , numArgs); 
@@ -557,6 +570,8 @@ int handleConnection(int fd){
 		printf("Incomplete parsing.\n"); 
 
 	}
+
+
 
 	free(arguments);
 	free(buf); 
