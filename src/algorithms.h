@@ -44,7 +44,7 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
     if(value == NULL){
 
-        printf("Not able to allocate memory.\n"); 
+        perror("Not able to allocate memory.\n"); 
         return ;
     }
 
@@ -69,7 +69,7 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
     if(curr == NULL){
 
-        printf("Not able to allocate memory.\n"); 
+        perror("Not able to allocate memory.\n"); 
 
         return; 
 
@@ -222,7 +222,7 @@ int sendRDB(int fd){
 		char* toSend = (char*)malloc(digitLen + 4 + numChar);
 
         if(toSend == NULL){
-            printf("Not able to allocate memory for sending RDB data.\n"); 
+            perror("Not able to allocate memory for sending RDB data.\n"); 
             return 1; 
         }
 		
