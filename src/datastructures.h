@@ -49,7 +49,7 @@ int replicaOffset = 0;
 
 char parentBuf[MAX_PARENT_BUFFER];
 int parentOffset = 0 ;
-int parentCommand = 92;
+int parentCommand = 0;
 
 
 typedef enum {

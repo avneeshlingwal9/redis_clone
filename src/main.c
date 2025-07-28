@@ -278,7 +278,7 @@ int execute(int fd , char** arguments , int numArgs){
 				}
 
 			
-
+				sleep(1);
 
 
 
@@ -288,6 +288,7 @@ int execute(int fd , char** arguments , int numArgs){
 			for(int j = 0; j < commandBufferOffset; j++){
 				free(commandBuffer[j]);
 			}
+
 
 			commandBufferOffset = 0 ; 
 
@@ -518,7 +519,7 @@ int execute(int fd , char** arguments , int numArgs){
 
 	free(arguments[0]);
 
-	return 1; 
+	return 0; 
 }
 
 
@@ -546,42 +547,49 @@ int handleConnection(int fd , int parentFd){
 
 		parentOffset += bytesRead; 
 
-		// Check for $ sign, after the parentCommand.
+		printf("Parent offset now is: %d\n", parentOffset);
 
-		if(parentOffset < parentCommand){
-			printf("Not read enough.\n");
-			return 1; 
-		}
+		// Check for * sign, after the parentCommand.
+
 		
 		
-		char* command = strchr(parentBuf + parentCommand , '*'); 
+		char* command = strchr(parentBuf, '*'); 
+		printf("Received data is : %s\n", parentBuf); 
 		
 		while(command != NULL){
 
-			if(command != NULL){
+			
 
 				printf("Command received.\n"); 
 				// Check if command is received completely and how many of them are received. 
 
+
+
 				int pos = command - parentBuf  + 1; 
+
 				// Pointing to number of args. 
 
 
 				int numArgs = 0; 
 
-				while(parentBuf[pos] != '\r'){
+				while(pos < parentOffset && parentBuf[pos] != '\r'){
 
 					numArgs = numArgs* 10 + (parentBuf[pos] - '0'); 
+
+					
 
 					pos++; 
 
 				}
 
+
+
 				pos += 2; // Pointing now to arguments and string starter. 
+
 
 				int totalReceived = 0 ; 
 
-				while(pos < parentOffset){
+				while(pos < parentOffset && totalReceived != numArgs){
 
 					// Skip string starting. 
 					pos++; 
@@ -589,26 +597,35 @@ int handleConnection(int fd , int parentFd){
 
 					int strl = 0 ; 
 
-					while(pos < parentOffset && parent[pos] != '\r'){
+					while(pos < parentOffset && parentBuf[pos] != '\r'){
 
 						strl = strl* 10 + (parentBuf[pos] - '0');
 
 						pos++; 
 
 					}
-					
-					pos = pos + 4 + strl; // SKip \r\n str \r\n. 
 
-					totalReceived++; 
+					if(pos + 4 + strl <= parentOffset){
+					
+						pos = pos + 4 + strl; // SKip \r\n str \r\n. 
+
+						totalReceived++; 
+					}
+
+					else{
+						break; 
+					}
 
 
 
 
 				}
 
+				printf("Total Received: %d\n", totalReceived); 
+
 				int endPos = pos; 
 
-				if(totalReceived == numArgs - 1){
+				if(totalReceived == numArgs){
 
 					char* buf = (char*)malloc(MAX_SIZE); 
 
@@ -616,15 +633,21 @@ int handleConnection(int fd , int parentFd){
 					int i = 0; 
 					pos = command - parentBuf;
 
+
+
 					while(pos < endPos){
 
 						buf[i++] = parentBuf[pos++]; 
 					}
+
+					printf("buffer is %s\n", buf); 
 					// Command copied.
 
 					char* input = buf; 
 
 					char* end = buf + i ; 
+
+					int numArgs = parseLen(&input);
 
 					char** arguments = (char**)malloc(sizeof(char*)* numArgs);
 
@@ -633,6 +656,9 @@ int handleConnection(int fd , int parentFd){
 						execute(fd , arguments , numArgs); 
 
 					}
+					else{
+						printf("Not able to parse successfully.\n");
+					}
 
 					free(buf); 
 
@@ -640,7 +666,7 @@ int handleConnection(int fd , int parentFd){
 
 					parentCommand = endPos;
 
-					command = strchr(parentBuf + parentCommand , '$'); 
+					command = strchr(parentBuf + parentCommand , '*'); 
 
 
 					
@@ -653,7 +679,7 @@ int handleConnection(int fd , int parentFd){
 
 					printf("Command not received properly.\n");
 
-					return 1; 
+					break; 
 				}
 
 
@@ -663,10 +689,8 @@ int handleConnection(int fd , int parentFd){
 
 
 
-			}
-			else{
-				printf("Command was not received this time.\n"); 
-			}
+			
+	
 
 	}
 		return 0;
@@ -799,6 +823,9 @@ int connectParent(char* args , char* port){
 	
 	
 	sendCommand(parentFd , command , commandLen); 
+	char buf[MAX_SIZE];
+
+	read(parentFd, buf , MAX_SIZE);
 
 	
 
@@ -811,12 +838,15 @@ int connectParent(char* args , char* port){
 
 	sendCommand(parentFd, command2 , commandLen); 
 
+	read(parentFd, buf , MAX_SIZE);
+
 
 
 	char* command3[] = {"REPLCONF", "capa", "psync2"};
 
 	sendCommand(parentFd , command3 , commandLen); 
 
+	read(parentFd, buf, MAX_SIZE);
 
 
 
@@ -825,7 +855,11 @@ int connectParent(char* args , char* port){
 
 	sendCommand(parentFd, command4 , commandLen);
 
+	read(parentFd, buf, MAX_SIZE);
 
+	read(parentFd, buf , MAX_SIZE);
+
+	printf("Connected to parent.\n"); 
 
 
 
@@ -994,7 +1028,7 @@ int main(int argc , char* argv[]) {
 		}
 
 
-		ev.events = EPOLLIN;
+		ev.events = EPOLLIN ;
 		ev.data.fd = server_fd; 
 
 		if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
@@ -1017,12 +1051,35 @@ int main(int argc , char* argv[]) {
 
 		}
 
+		
+
 		while(1){
 	
 		nfds = epoll_wait(epoll_fd , events , MAX_CONNECTIONS , -1); 
 
+		bool execParent = false; 
+
+		for(int i = 0 ; i < nfds; i++){
+
+			if(events[i].data.fd == parent_fd){
+
+				handleConnection(events[i].data.fd , parent_fd);
+				
+
+			}
+
+		}
+
+		execParent = true; 
+
+
+
 
 		for(int i = 0 ; i < nfds ; i++){
+
+			if(events[i].data.fd == parent_fd){
+				continue;
+			}
 
 			if(events[i].data.fd == server_fd){
 

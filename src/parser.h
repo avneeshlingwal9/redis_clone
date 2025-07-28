@@ -392,26 +392,8 @@ void sendCommand(int fd , char* commands[], int commandLen){
 
 	send(fd , toSend , strlen(toSend),0);
 
-	char buf[MAX_SIZE];
 
 
-
-	int bytesRead = read(fd, buf , MAX_SIZE); 
-
-	if(bytesRead == -1){
-		printf("Error in reading.");
-
-	
-		return ; 
-	}
-
-	if(bytesRead == 0){
-
-		printf("No bytes were read.\n"); 
-
-		return ; 
-
-	}
 /* 	
 	int len = parseLen(&input);
 
