@@ -209,6 +209,11 @@ Options parseOption(char* opt)
 		
 		return PSYNC2;
 	}
+	if(strcasecmp(opt, "getack") == 0){
+
+		return GETACK;
+
+	}
 
 	printf("Option %s not found.\n", opt); 
 

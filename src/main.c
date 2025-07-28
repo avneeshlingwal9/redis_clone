@@ -498,7 +498,24 @@ int execute(int fd , char** arguments , int numArgs){
 	
 	else if(command == REPLCONF){
 
+		Options option = parseOption(arguments[1]);
+
+		free(arguments[1]);
+
+		if(option == GETACK){
+
+			char* response[] = {"REPLCONF", "ACK", "0"};
+
+			char* toSend = encodeArray(response, 3);
+
+			send(fd ,toSend , strlen(toSend),0);
+
+			free(toSend);
+		}
+		else{
+
 		send(fd, RESP_OK, strlen(RESP_OK),0);
+	}
 
 
 	}

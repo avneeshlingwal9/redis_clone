@@ -75,6 +75,7 @@ typedef enum{
     LISTENINGPORT,
     CAPA, 
     PSYNC2,
+    GETACK,
 
 
 
