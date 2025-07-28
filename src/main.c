@@ -559,8 +559,9 @@ int handleConnection(int fd , int parentFd){
 		int bytesRead = read(fd , parentBuf + parentOffset, MAX_PARENT_BUFFER);
 
 		if(bytesRead == 0){
-			printf("No bytes were sent from parents.\n");
-			return 1;
+
+
+			return 0;
 		}
 
 		if(bytesRead < 0){
