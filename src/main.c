@@ -1045,7 +1045,7 @@ int main(int argc , char* argv[]) {
 		} 
 		if(parent_fd != -1){
 
-			makeNonBlocking(parent_fd);
+			//makeNonBlocking(parent_fd);
 
 			ev.events = EPOLLIN;
 			ev.data.fd = parent_fd;
