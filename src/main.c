@@ -257,7 +257,7 @@ int execute(int fd , char** arguments , int numArgs){
 		}
 
 		
-		if(isMaster){
+		if(isMaster && commandBufferOffset > 0){
 
 
 			send(fd , RESP_OK , strlen(RESP_OK), 0); 
@@ -284,7 +284,7 @@ int execute(int fd , char** arguments , int numArgs){
 				}
 
 			
-				sleep(1);
+				
 
 
 
@@ -1045,6 +1045,8 @@ int main(int argc , char* argv[]) {
 		} 
 		if(parent_fd != -1){
 
+			makeNonBlocking(parent_fd);
+
 			ev.events = EPOLLIN;
 			ev.data.fd = parent_fd;
 
@@ -1063,7 +1065,6 @@ int main(int argc , char* argv[]) {
 	
 		nfds = epoll_wait(epoll_fd , events , MAX_CONNECTIONS , -1); 
 
-		bool execParent = false; 
 
 		for(int i = 0 ; i < nfds; i++){
 
@@ -1076,7 +1077,6 @@ int main(int argc , char* argv[]) {
 
 		}
 
-		execParent = true; 
 
 
 
