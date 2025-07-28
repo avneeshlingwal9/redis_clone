@@ -451,7 +451,7 @@ int execute(int fd , char** arguments , int numArgs){
 			char* toEncode = (char*)malloc(strlen(role) + strlen(replid) + strlen(ofset) +  1); 
 			
 			if(toEncode == NULL){
-				printf("Not able to allocate memory.\n");
+				perror("Not able to allocate memory to encode.\n");
 				return 1; 
 			}
 
@@ -523,58 +523,231 @@ int execute(int fd , char** arguments , int numArgs){
 
 
 
-int handleConnection(int fd){
+int handleConnection(int fd , int parentFd){
 
 
-	char* buf = (char*)malloc(MAX_SIZE); 
-	char* input = buf; 
+
+	if(fd == parentFd){
 
 
-	int bytesRead = read(fd , buf , MAX_SIZE);
-	if(bytesRead == 0){
-		return 0; 
-	}
-	
-	char* end = buf + bytesRead; 
+		// Read into parents buffer. 
 
-	int numArgs = parseLen(&input); 
+		int bytesRead = read(fd , parentBuf + parentOffset, MAX_PARENT_BUFFER);
 
-	if(numArgs <= 0){
-		printf("No arguments found.\n"); 
-		return 0;
-	}
-
-	char** arguments = (char**)malloc(numArgs* sizeof(char*)); 
-
-	if(!isMaster){
-		printf("The commands are: ");
-
-		for(int i = 0 ; i < numArgs ; i++){
-
-			printf("%s ", arguments[i]);
-
+		if(bytesRead == 0){
+			printf("No bytes were sent from parents.\n");
+			return 1;
 		}
 
-		printf("\n");
+		if(bytesRead < 0){
+			perror("Error.\n");
+			return 1; 
+		}
+
+		parentOffset += bytesRead; 
+
+		// Check for $ sign, after the parentCommand.
+
+		if(parentOffset < parentCommand){
+			printf("Not read enough.\n");
+			return 1; 
+		}
+		
+		
+		char* command = strchr(parentBuf + parentCommand , '*'); 
+		
+		while(command != NULL){
+
+			if(command != NULL){
+
+				printf("Command received.\n"); 
+				// Check if command is received completely and how many of them are received. 
+
+				int pos = command - parentBuf  + 1; 
+				// Pointing to number of args. 
+
+
+				int numArgs = 0; 
+
+				while(parentBuf[pos] != '\r'){
+
+					numArgs = numArgs* 10 + (parentBuf[pos] - '0'); 
+
+					pos++; 
+
+				}
+
+				pos += 2; // Pointing now to arguments and string starter. 
+
+				int totalReceived = 0 ; 
+
+				while(pos < parentOffset){
+
+					// Skip string starting. 
+					pos++; 
+					// Find length. 
+
+					int strl = 0 ; 
+
+					while(pos < parentOffset && parent[pos] != '\r'){
+
+						strl = strl* 10 + (parentBuf[pos] - '0');
+
+						pos++; 
+
+					}
+					
+					pos = pos + 4 + strl; // SKip \r\n str \r\n. 
+
+					totalReceived++; 
+
+
+
+
+				}
+
+				int endPos = pos; 
+
+				if(totalReceived == numArgs - 1){
+
+					char* buf = (char*)malloc(MAX_SIZE); 
+
+					// Copy into buffer, which will actually execute everything. 
+					int i = 0; 
+					pos = command - parentBuf;
+
+					while(pos < endPos){
+
+						buf[i++] = parentBuf[pos++]; 
+					}
+					// Command copied.
+
+					char* input = buf; 
+
+					char* end = buf + i ; 
+
+					char** arguments = (char**)malloc(sizeof(char*)* numArgs);
+
+					if(parseArray(&input, end,  &arguments , numArgs) == true){
+
+						execute(fd , arguments , numArgs); 
+
+					}
+
+					free(buf); 
+
+					free(arguments); 
+
+					parentCommand = endPos;
+
+					command = strchr(parentBuf + parentCommand , '$'); 
+
+
+					
+					
+
+				}
+
+				
+				else{
+
+					printf("Command not received properly.\n");
+
+					return 1; 
+				}
+
+
+				
+
+				
+
+
+
+			}
+			else{
+				printf("Command was not received this time.\n"); 
+			}
 
 	}
+		return 0;
 
-	if(parseArray(&input , end , &arguments , numArgs) == true){
 
-		execute(fd , arguments , numArgs); 
+
+
+
+
+			
+		
+
+		
+
+
+
+
 
 	}
 
 	else{
 
-		printf("Incomplete parsing.\n"); 
 
+		char* buf = (char*)malloc(MAX_SIZE); 
+		char* input = buf; 
+
+
+		int bytesRead = read(fd , buf , MAX_SIZE);
+		if(bytesRead == 0){
+		
+			return 0; 
+		}
+
+		if(bytesRead < 0){
+			perror("Error occured\n");
+
+			return 1; 
+		}
+
+		
+		char* end = buf + bytesRead; 
+
+		int numArgs = parseLen(&input); 
+
+		if(numArgs <= 0){
+			printf("No arguments found.\n"); 
+			return 0;
+		}
+
+		char** arguments = (char**)malloc(numArgs* sizeof(char*)); 
+
+/* 		if(!isMaster){
+			printf("The commands are: ");
+
+			for(int i = 0 ; i < numArgs ; i++){
+
+				printf("%s ", arguments[i]);
+
+			}
+
+			printf("\n");
+
+		} */
+
+		if(parseArray(&input , end , &arguments , numArgs) == true){
+
+			execute(fd , arguments , numArgs); 
+
+		}
+
+		else{
+
+			printf("Incomplete parsing.\n"); 
+
+		}
+
+
+
+		free(arguments);
+		free(buf); 
 	}
-
-
-
-	free(arguments);
-	free(buf); 
 
 	return 0; 
 
@@ -624,16 +797,11 @@ int connectParent(char* args , char* port){
 	char* command[] = {"PING"}; 
 	int commandLen = 1; 
 	
-	char* response = sendCommand(parentFd , command , commandLen); 
+	
+	sendCommand(parentFd , command , commandLen); 
 
-	if(response == NULL){
+	
 
-		printf("No response by parent.\n"); 
-		return 1; 
-
-	}
-
-	free(response);
 
 	char* command2[3] = {"REPLCONF", "listening-port"};
 
@@ -641,38 +809,28 @@ int connectParent(char* args , char* port){
 
 	commandLen = 3; 
 
-	response = sendCommand(parentFd, command2 , commandLen); 
+	sendCommand(parentFd, command2 , commandLen); 
 
-	if(response == NULL){
 
-		printf("No response by parent.\n");
-		return 1; 
-
-	}
-
-	free(response); 
 
 	char* command3[] = {"REPLCONF", "capa", "psync2"};
 
-	response = sendCommand(parentFd, command3 , commandLen);
+	sendCommand(parentFd , command3 , commandLen); 
 
-	if(response == NULL){
-		printf("No response by parent.\n");
-		return 1; 
-	}
-	free(response); 
+
+
 
 	char* command4[] = {"PSYNC", "?", "-1"};
 
-	response = sendCommand(parentFd, command4 , commandLen);
+
+	sendCommand(parentFd, command4 , commandLen);
 
 
 
-	free(response);
 
-	char* buf[MAX_SIZE];
 
-	read(parentFd, buf , 88); 
+
+
 
 
 	return parentFd;
@@ -888,7 +1046,7 @@ int main(int argc , char* argv[]) {
 
 				// Something is available for reading from previous connections. 
 
-				handleConnection(events[i].data.fd);
+				handleConnection(events[i].data.fd , parent_fd);
 
 
 

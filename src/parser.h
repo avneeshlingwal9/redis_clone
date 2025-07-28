@@ -10,7 +10,7 @@ char* parseBulkString( char ** input , int length){
 
 	if(str == NULL){
 
-		printf("Not able to allocate memory.\n"); 
+		perror("Not able to allocate memory for parsing.\n"); 
 
 		return NULL;
 
@@ -386,34 +386,33 @@ long decodeSeconds(FILE *file){
 
 } */
 
-char* sendCommand(int fd , char* commands[], int commandLen){
+void sendCommand(int fd , char* commands[], int commandLen){
 
     char* toSend = encodeArray(commands , commandLen); 
 
 	send(fd , toSend , strlen(toSend),0);
 
-	char* buf = (char*)malloc(MAX_SIZE); 
+	char buf[MAX_SIZE];
 
-	char* input = buf; 
+
 
 	int bytesRead = read(fd, buf , MAX_SIZE); 
 
 	if(bytesRead == -1){
 		printf("Error in reading.");
 
-		free(buf);
-		return NULL; 
+	
+		return ; 
 	}
 
 	if(bytesRead == 0){
 
 		printf("No bytes were read.\n"); 
-		free(buf);
 
-		return NULL; 
+		return ; 
 
 	}
-	
+/* 	
 	int len = parseLen(&input);
 
 	char* response = parseBulkString(&input, len); 
@@ -430,11 +429,11 @@ char* sendCommand(int fd , char* commands[], int commandLen){
 
     
 
+ */
 
 
-	free(buf); 
 
-    return response; 
+    return; 
 
 
 

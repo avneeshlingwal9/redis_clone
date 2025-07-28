@@ -24,6 +24,7 @@
 #define MAX_COMMANDS 1024
 #define MAX_SIZE 2056
 #define MAX_REPLICA 32
+#define MAX_PARENT_BUFFER 1048576
 char* dir  = NULL; 
 
 char* dbfilename = NULL; 
@@ -45,6 +46,10 @@ int commandBufferOffset = 0;
 int replicaList[MAX_REPLICA];
 
 int replicaOffset = 0; 
+
+char parentBuf[MAX_PARENT_BUFFER];
+int parentOffset = 0 ;
+int parentCommand = 92;
 
 
 typedef enum {

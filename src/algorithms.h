@@ -44,7 +44,7 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
     if(value == NULL){
 
-        perror("Not able to allocate memory.\n"); 
+        perror("Not able to allocate memory to ValueNode.\n"); 
         return ;
     }
 
@@ -69,7 +69,7 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
     if(curr == NULL){
 
-        perror("Not able to allocate memory.\n"); 
+        perror("Not able to allocate memory to HashMap.\n"); 
 
         return; 
 
@@ -231,6 +231,8 @@ int sendRDB(int fd){
 		send(fd , toSend, strlen(toSend), 0); 
 
 		free(toSend);
+
+        return 0;
 }
 
 
