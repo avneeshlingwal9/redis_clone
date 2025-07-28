@@ -229,7 +229,7 @@ int execute(int fd , char** arguments , int numArgs){
 	else if(command == SET){
 
 
-		addToBuffer(arguments , numArgs); 
+
 
 
 		char* key = arguments[1];
@@ -241,16 +241,22 @@ int execute(int fd , char** arguments , int numArgs){
 
 			Options option = parseOption(arguments[3]);
 
-			free(arguments[3]);
+
 
 			expiry = atoi(arguments[4]);
 
 		}
 
 		setValue(key , value ,expiry, false);
+				
+		addToBuffer(arguments , numArgs); 
 
-		free(key);
-		free(value);
+		for(int i = 1; i < numArgs; i++){
+
+			free(arguments[i]);
+		}
+
+		
 		if(isMaster){
 
 
