@@ -1076,10 +1076,7 @@ int main(int argc , char* argv[]) {
 
 		
 		int connection_backlog = 5;
-		if (listen(server_fd, connection_backlog) != 0) {
-			printf("Listen failed: %s \n", strerror(errno));
-			return 1;
-		}
+		
 		
 		printf("Waiting for a client to connect...\n");
 		client_addr_len = sizeof(client_addr);
@@ -1088,7 +1085,6 @@ int main(int argc , char* argv[]) {
 
 		struct epoll_event ev, events[MAX_CONNECTIONS];
 
-		makeNonBlocking(server_fd);
 
 
 
@@ -1114,7 +1110,12 @@ int main(int argc , char* argv[]) {
 			}
 
 		}
+		if (listen(server_fd, connection_backlog) != 0) {
+			printf("Listen failed: %s \n", strerror(errno));
+			return 1;
+		}
 
+		makeNonBlocking(server_fd);
 
 		ev.events = EPOLLIN ;
 		ev.data.fd = server_fd; 
