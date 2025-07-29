@@ -504,7 +504,14 @@ int execute(int fd , char** arguments , int numArgs){
 
 		if(option == GETACK){
 
-			char* response[] = {"REPLCONF", "ACK", "0"};
+			char* response[3] = {"REPLCONF", "ACK"};
+
+			int digits = snprintf(NULL, 0, "%d", processedFromParent);
+
+			char numOff[digits + 1]; 
+			snprintf(numOff, digits + 1 , "%d", processedFromParent);
+
+			response[2] = numOff;
 
 			char* toSend = encodeArray(response, 3);
 
@@ -565,10 +572,10 @@ int handleConnection(int fd , int parentFd){
 		}
 
 		if(bytesRead < 0){
-			perror("Error.\n");
-			return 1; 
+	
+			return 0; 
 		}
-
+		
 		parentOffset += bytesRead; 
 
 		printf("Parent offset now is: %d\n", parentOffset);
@@ -577,8 +584,8 @@ int handleConnection(int fd , int parentFd){
 
 		
 		
-		char* command = strchr(parentBuf, '*'); 
-		printf("Received data is : %s\n", parentBuf); 
+		char* command = strchr(parentBuf + parentCommand, '*'); 
+
 		
 		while(command != NULL){
 
@@ -649,6 +656,8 @@ int handleConnection(int fd , int parentFd){
 
 				int endPos = pos; 
 
+				
+
 				if(totalReceived == numArgs){
 
 					char* buf = (char*)malloc(MAX_SIZE); 
@@ -664,7 +673,6 @@ int handleConnection(int fd , int parentFd){
 						buf[i++] = parentBuf[pos++]; 
 					}
 
-					printf("buffer is %s\n", buf); 
 					// Command copied.
 
 					char* input = buf; 
@@ -677,7 +685,19 @@ int handleConnection(int fd , int parentFd){
 
 					if(parseArray(&input, end,  &arguments , numArgs) == true){
 
-						execute(fd , arguments , numArgs); 
+						Commands com = parseCommand(arguments[0]);
+						
+
+						if(com == PING){
+
+							free(arguments[0]);
+					
+						}
+						else{
+
+
+							execute(fd , arguments , numArgs); 
+						}
 
 					}
 					else{
@@ -689,6 +709,11 @@ int handleConnection(int fd , int parentFd){
 					free(arguments); 
 
 					parentCommand = endPos;
+					processedFromParent = endPos; 
+
+					printf("The commands are processed till: %d\n", processedFromParent);
+
+					
 
 					command = strchr(parentBuf + parentCommand , '*'); 
 
@@ -840,8 +865,6 @@ int connectParent(char* args , char* port){
 	}
 
 
-
-
 	char* command[] = {"PING"}; 
 	int commandLen = 1; 
 	
@@ -849,9 +872,16 @@ int connectParent(char* args , char* port){
 	sendCommand(parentFd , command , commandLen); 
 	char buf[MAX_SIZE];
 
-	read(parentFd, buf , MAX_SIZE);
 
-	
+	if(read(parentFd, buf , MAX_SIZE) <= 0){
+
+		printf("Handshake failed.\n");
+
+		return -1;
+
+	} 
+
+
 
 
 	char* command2[3] = {"REPLCONF", "listening-port"};
@@ -862,15 +892,24 @@ int connectParent(char* args , char* port){
 
 	sendCommand(parentFd, command2 , commandLen); 
 
-	read(parentFd, buf , MAX_SIZE);
+	if(read(parentFd, buf , MAX_SIZE) <= 0){
 
+		printf("Handshake failed.\n");
+		return -1;
+
+	}
 
 
 	char* command3[] = {"REPLCONF", "capa", "psync2"};
 
 	sendCommand(parentFd , command3 , commandLen); 
 
-	read(parentFd, buf, MAX_SIZE);
+	if(read(parentFd, buf, MAX_SIZE) <= 0){
+
+		printf("Handshake Failed.\n");
+		return -1;
+
+	}
 
 
 
@@ -879,9 +918,19 @@ int connectParent(char* args , char* port){
 
 	sendCommand(parentFd, command4 , commandLen);
 
-	read(parentFd, buf, MAX_SIZE);
+	if(read(parentFd, buf, MAX_SIZE) <= 0){
 
-	read(parentFd, buf , MAX_SIZE);
+		printf("Handshake Failed.\n");
+
+		return -1; 
+	}
+
+	if(read(parentFd, buf , MAX_SIZE) <= 0) {
+
+		printf("Reading RDB Failed.\n");
+		return -1; 
+
+	}
 
 	printf("Connected to parent.\n"); 
 
@@ -1050,20 +1099,9 @@ int main(int argc , char* argv[]) {
 			parent_fd = connectParent(argv[4], portStr); 
 			
 		}
-
-
-		ev.events = EPOLLIN ;
-		ev.data.fd = server_fd; 
-
-		if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
-
-			perror("Error occured while adding file descriptor.\n");
-			return 3; 
-
-		} 
 		if(parent_fd != -1){
 
-			//makeNonBlocking(parent_fd);
+			makeNonBlocking(parent_fd);
 
 			ev.events = EPOLLIN;
 			ev.data.fd = parent_fd;
@@ -1076,6 +1114,18 @@ int main(int argc , char* argv[]) {
 			}
 
 		}
+
+
+		ev.events = EPOLLIN ;
+		ev.data.fd = server_fd; 
+
+		if(epoll_ctl(epoll_fd , EPOLL_CTL_ADD , server_fd , &ev) != 0){
+
+			perror("Error occured while adding file descriptor.\n");
+			return 3; 
+
+		} 
+		
 
 		
 
