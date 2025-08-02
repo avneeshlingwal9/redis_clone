@@ -12,6 +12,16 @@
 #include "parser.h"
 #include <sys/wait.h>
 
+/**
+ * Creates database from .rdb binary file. 
+ * 
+ * @param No parameters. 
+ * 
+ *
+ * 
+ * 
+*/
+
 int createDatabase(){
 
 	if(!fileExists(filePath)){
@@ -145,12 +155,34 @@ int createDatabase(){
 
 }
 
+/**
+ * @brief Makes the file descriptor non-blocking
+ *
+ * @details The file descriptors are made non-blocking using fcntl. 
+ *
+ * @param fd File Descriptor
+ * 
+ * @return int , to denote, whether the file descriptor was successful or not. 
+ */
 int makeNonBlocking(int fd){
 
 	int flags = fcntl(fd , F_GETFL, 0);
 	return fcntl(fd , F_SETFL , flags | O_NONBLOCK); 
 
 }
+/**
+ * @brief Executes the commands. 
+ *
+ * @details First parses the commands and then executes the commands and send appropriate result back to client.
+ *
+ * @param fd : File descriptor of the connection.
+ * 
+ * @param arguments: An array containing command and arguments.
+ * 
+ * @param numArgs: An integers denoting the number of arguments. 
+ * 
+ * @return int : To tell whether the execution was successful or not. 
+ */
 
 int execute(int fd , char** arguments , int numArgs){
 
@@ -552,7 +584,20 @@ int execute(int fd , char** arguments , int numArgs){
 	return 0; 
 }
 
-
+/**
+ * @brief Handles the connection. 
+ *
+ * @details In case of parent: 
+ *  it reads into parents buffer, as we are using TCP, so command may be segmented, so then parses it according to RESP protocol. 
+ *  
+ * In case of client:
+ *  it simply parse it. 
+ * In both cases, it calls execute() function.
+ *
+ * @param fd : The current file descriptor of the connection.
+ * @param parentFd : The file descriptor of the parent, if it exists. 
+ * @return int Whether the handling was successful or not. 
+ */
 
 int handleConnection(int fd , int parentFd){
 
@@ -832,6 +877,25 @@ int handleConnection(int fd , int parentFd){
 
 }
 
+/**
+ * @brief Used by replica-redis to connect to the leader.
+ *
+ * @details Whenever the replication happens, this is used by follower to connect to the leader. 
+ * 
+ * Uses inet_pton to convert parent address(string) into IP address. 
+ * Then performs basic REDIS handshake between parent and child.
+ * PING -> PONG
+ * REPLCONF 'listening port' port -> OK 
+ * REPLCONF capa psync -> OK ; // The capabilities of follower. 
+ * PSYNC ? -1 -> SYNC TYPE REPLICATION_ID offset And rdb file. 
+ * 
+ * @param args: A string, containing parent address and parent port. 
+ * 
+ * @param port: Containing the port of the child.
+ * 
+ * @return Whether connection was successful or not. 
+ * 
+ */
 int connectParent(char* args , char* port){
 
 	char* parentAddress = strtok(parent , " ");
@@ -968,7 +1032,13 @@ int connectParent(char* args , char* port){
 
 
 
+/**
+ * @brief Creates a socket, and starts the server.
+ *
+ * @details Creates socket, and adds it to epoll queue, and then listens for any incoming connections. 
+ *
 
+ */
 
 int main(int argc , char* argv[]) {
 
@@ -1020,21 +1090,6 @@ int main(int argc , char* argv[]) {
 
 
 	}
-
-
-
-
-/* 	if(fork() == 0){
-
-		createDatabase(); 
-
-	} */
-	
-	
-/* 	else{
-
-		wait(0); */
-
 		isMaster = port == 6379 ? true : false ; 
 
 		createDatabase();

@@ -52,6 +52,12 @@ int parentOffset = 0 ;
 int parentCommand = 0;
 int processedFromParent = 0; 
 
+/**
+ * @enum Commands
+ * @brief Enums for different types of commands.
+ *
+
+ */
 
 typedef enum {
 
@@ -69,6 +75,12 @@ typedef enum {
 
 }Commands;
 
+/**
+ * @enum Options
+ * @brief Different options used by commands.
+ *
+ */
+
 typedef enum{
     PX,
     REPLICATION, 
@@ -81,7 +93,12 @@ typedef enum{
 
 
 }Options; 
-
+/**
+ * @struct ValueNode
+ * @brief To store value.
+ *
+ * @details Stores value and currTIme, and expire time of the value.
+ */
 typedef struct ValueNode{
 
     char* value; 
@@ -89,6 +106,15 @@ typedef struct ValueNode{
     double expireTime; 
 
 }ValueNode;
+
+/**
+ * @struct HashMap
+ * 
+ * @brief HashMap structure to store key-value pairs.
+ * 
+ *
+ * @details Uses uthash, to enable hashing. 
+ */
 typedef struct HashMap{
 
     char* key;

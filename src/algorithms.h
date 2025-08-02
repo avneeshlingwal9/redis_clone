@@ -2,7 +2,17 @@
 #include <time.h>
 
 
+
 HashMap *dictHead = NULL;
+/**
+ * @brief Checks whether the PATH is valid or not.  
+ *
+ * @details Used in creating the database.
+ *
+ * @param path  Path to check.
+ * 
+ * @return bool Whether the PATH is valid or not.
+ */
 
 bool fileExists(char* path){
 
@@ -22,6 +32,14 @@ bool fileExists(char* path){
 
 }
 
+/**
+ * @brief Gets the time difference.
+ * 
+ * @param struct timespec begin: The time from which we would like to measure.
+ * 
+ * @return double the value of difference. 
+ * 
+ */
 
 double getTimeDifference(struct timespec begin){
 
@@ -37,6 +55,20 @@ double getTimeDifference(struct timespec begin){
 }
 
 
+
+/**
+ * @brief Sets value in the HashTable. 
+ *
+ * @param key: The key of string type. 
+ * 
+ * @param aValue: The value. 
+ * 
+ * @param expiry: The expiry of key in milliseconds.
+ * 
+ * @param unixTime: Whether the time is unixTime or not. 
+ * 
+ * @return Return type and description
+ */
 
 void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
@@ -93,6 +125,16 @@ void setValue(char* key , char* aValue , double expiry , bool unixTime){
 
 }
 
+/**
+ * @brief Given a key, returns its value from HashTable. 
+ * 
+ * @details Used hash_find_str to find the key.  
+ *
+ * @param key: The key.
+ * @return Return value. *
+ * 
+ */
+
 char* getValue(char* key){
 
     HashMap* node ; 
@@ -132,6 +174,13 @@ char* getValue(char* key){
 
 }
 
+/**
+ * @brief Free's the value from a node.
+ *
+ * @param node: Type of valueNode.
+
+ */
+
 void freeValue(void* node){
 
     ValueNode* valueNode = (ValueNode*)node; 
@@ -142,6 +191,12 @@ void freeValue(void* node){
 
 }
 
+/**
+ * @brief Frees the hashtable.
+ *
+ * @details Uses HASH_ITER to iterate and HASH_DEL to delete. 
+ *
+ */
 void freeDictionary(){
 
 
@@ -162,6 +217,15 @@ void freeDictionary(){
 
 }
 
+/**
+ * @brief Get all the keys stored. 
+ *
+ * @details Stores all the keys in an array, and return the number of them. Used by parent, to propagate commands to the child.
+ *
+ *
+ * @param keys: The address of the array to store the keys. 
+ * @return The total number of keys. 
+ */
 
 
 int getKeys(char*** keys){
@@ -200,6 +264,18 @@ int getKeys(char*** keys){
 
 
 }
+/**
+ * @brief Function to send a valid RDB file.
+ *
+ * @details Used by leader, to send its follower, during initial handshake phase. 
+ *          The empty RDB file in hex, is converted to binary and then sent to followers.
+ * 
+ * 
+ *
+ * @param fd File descriptors to send.
+ * @return To denote whether execution was successful or not. 
+ * 
+ */
 
 int sendRDB(int fd){
     int numBytes = strlen(EMPTYRDB);
