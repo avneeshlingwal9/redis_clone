@@ -1,33 +1,21 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/d9c4a1f4-27d5-4a4a-9914-7df36a7b109d)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# REDIS CLONE USING C
 
-This is a starting point for C solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+It is a simple redis like key-value store. 
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+It uses event loop as a way to handle concurrent connections among different clients and uses epoll for the same. 
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+Provides support for `PING` , `GET`, `SET`, `ECHO` commands. 
 
-# Passing the first stage
+The reading of RDB is also done. 
 
-The entry point for your Redis implementation is in `src/main.c`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+Leader follower mechanism is supported, in which a leader can have multiple followers and the handshaking is also supported.
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
+The leader also propagates all the commands to its followers. 
 
-That's all!
+For storing Key-Value pairs, `uthash` is used. 
 
-# Stage 2 & beyond
+The support for expiry of keys is also provided. 
 
-Note: This section is for stages 2 and beyond.
 
-1. Ensure you have `cmake` installed locally
-1. Run `./your_program.sh` to run your Redis server, which is implemented in
-   `src/main.c`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+
+
